@@ -40,6 +40,39 @@
   .meters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
   .meters div{height:6px;background:#1c1f27;border-radius:3px;overflow:hidden}
   .meters i{display:block;height:100%;width:0;background:var(--accent);transition:width .05s linear}
+  .tgt{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px}
+  .tgt button{padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15}
+  .tgt button b{font-size:14px}
+  .tgt button small{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .tgt button.on small{color:#1a1205}
+  .tgt button.own{border-color:#5ab0ff}
+  .pgrp{margin:8px 0 2px;font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+  .pgrp span:last-child{opacity:.7}
+  #pats .grid3 button{position:relative;padding:8px 4px}
+  #pats button.live:not(.on){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  #pats button.live::after{content:'';position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#4ade80;animation:lp 1s ease-in-out infinite}
+  @keyframes lp{50%{opacity:.25}}
+  /* actieve knoppen knipperen zachtjes op de maat (--bp = beat-puls 0..1) */
+  :root{--bp:0}
+  #pats button.on,#patTarget button.own,#strobeDivs button.on,#smokeDivs button.on,#skBtn.on,#smoke.on,
+  #quick [data-q^="sd"].on,#quick [data-q="kill"].on{filter:brightness(calc(.72 + .5 * var(--bp)));box-shadow:0 0 calc(2px + 14px * var(--bp)) rgba(245,166,35,calc(.25 + .6 * var(--bp)))}
+  #pats button.live{filter:brightness(calc(.8 + .4 * var(--bp)));box-shadow:0 0 calc(2px + 12px * var(--bp)) rgba(74,222,128,calc(.2 + .6 * var(--bp)))}
+  #patTarget button.own{border-color:#5ab0ff;box-shadow:0 0 calc(2px + 12px * var(--bp)) rgba(90,176,255,calc(.25 + .6 * var(--bp)))}
+  body.flashing #flashBtn,body.flashing #quick .qflash{background:#fff;color:#111;box-shadow:0 0 24px #fff}
+  body.smoking #smokeHoldBtn,body.smoking #quick [data-q="smoke"],body.smoking #puff{background:#c9b6ff;color:#1a1205;border-color:#c9b6ff;box-shadow:0 0 16px rgba(201,182,255,.8)}
+  #topbar{position:absolute;right:calc(12px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));z-index:5;display:flex;gap:8px;align-items:stretch}
+  #topMic{position:relative;overflow:hidden;display:flex;align-items:center;gap:7px;padding:8px 16px 8px 13px;font-size:15px;font-weight:700;border-radius:22px;background:#2a1414;border:2px solid #ff4d4d;color:#fff;box-shadow:0 0 14px rgba(255,77,77,.35)}
+  #topMic .mi{font-size:18px}
+  #topMic i{position:absolute;left:0;bottom:0;height:3px;width:0;background:#4ade80;transition:width .06s linear}
+  #topMic.on{background:#ff3b3b;border-color:#ff8080;box-shadow:0 0 calc(8px + 18px * var(--bp)) rgba(255,70,70,calc(.4 + .5 * var(--bp)))}
+  #topMic.on .ml::after{content:' ●';animation:lp 1s ease-in-out infinite}
+  #topMsg{position:absolute;right:calc(12px + env(safe-area-inset-right));top:calc(58px + env(safe-area-inset-top));z-index:5;max-width:min(360px,calc(100% - 24px));background:rgba(20,22,28,.95);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.4;display:none}
+  #topMsg.show{display:block}
+  #langSel{display:flex;gap:0;background:#1c1f27;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  #langSel button{border:0;border-radius:0;padding:6px 11px;font-size:12px;font-weight:600;background:transparent}
+  #langSel button.on{background:var(--accent);color:#1a1205}
+  @media (max-width:520px){ #hud{display:none} #topbar{left:calc(12px + env(safe-area-inset-left));justify-content:space-between} #topMic{flex:1;justify-content:center} }
+  @media (max-width:820px){ #langSel button{padding:9px 12px;font-size:14px} #hud{max-width:calc(100% - 250px)} #hud p{display:none} #topMic{padding:8px 12px 8px 10px;font-size:14px} #hud{top:calc(12px + env(safe-area-inset-top))} }
   .astat{color:var(--muted);font-size:12px;margin:6px 0 0;line-height:1.45}
   .prow{display:grid;grid-template-columns:1fr 1fr 58px;gap:6px;margin:4px 0}
   .prow input,.prow select{width:100%;background:#1c1f27;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px;font:inherit;font-size:13px}
@@ -53,9 +86,18 @@
   #quick{display:none}
   body.show #panel{display:none}
   body.show #hud p{display:none}
-  body.show #quick{display:flex;position:absolute;left:0;right:0;bottom:0;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(10,11,15,.82);backdrop-filter:blur(6px);overflow-x:auto}
+  body.show #quick{display:flex;flex-direction:column;gap:6px;position:absolute;left:0;right:0;bottom:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(10,11,15,.82);backdrop-filter:blur(6px)}
+  #quick .qrow{display:flex;gap:6px;overflow-x:auto}
+  @media (max-width:760px){
+    body.show #app{height:100dvh}
+    body.show #stage{flex:1 1 auto;height:100dvh}
+    #quick .qrow{flex-wrap:wrap;overflow:visible}
+    #quick button{flex:1 1 28%;padding:12px 4px;font-size:14px}
+    #quick .qflash{flex:1 1 100%;padding:16px 4px;font-size:18px}
+    #quick [data-q="exit"]{flex:0 0 52px}
+  }
   #quick button{flex:1 0 auto;padding:14px 12px;font-size:15px;white-space:nowrap;user-select:none;-webkit-user-select:none;touch-action:none}
-  #quick .qflash{border:2px solid #f5f5f5;font-weight:700}
+  #quick .qflash{border:2px solid #f5f5f5;font-weight:700;flex:2 0 auto}
   #quick .qflash.hit{background:#fff;color:#000}
   .legend{display:grid;grid-template-columns:22px 1fr;gap:4px 6px;font-size:12px;color:var(--muted)}
   .legend b{color:var(--text);font-weight:600}
@@ -74,14 +116,25 @@
 <div id="app">
   <div id="stage">
     <canvas id="c"></canvas>
+    <div id="topbar">
+      <button id="topMic" title="Microfoon aan/uit"><span class="mi">🎤</span><span class="ml">Microfoon</span><i id="micLvl"></i></button>
+      <div id="langSel" title="Taal / Language"><button data-l="nl">NL</button><button data-l="en">EN</button></div>
+    </div>
+    <div id="topMsg"></div>
     <div id="hud">
       <h1>Huiskamer Madeira — lichtopstelling</h1>
       <p>Simulatie · nog niet live gekoppeld aan SoundSwitch · sleep om te draaien, scroll om te zoomen</p>
     </div>
     <div id="quick">
-      <button data-q="rustig">😌 Rustig</button><button data-q="party">Party</button><button data-q="volgas">🔥 Vol gas</button>
-      <button data-q="drop">💥 Drop</button><button data-q="flash" class="qflash">⚡ FLITS</button><button data-q="kill">🚫 Strobe</button>
-      <button data-q="freeze">❄️ Freeze</button><button data-q="bo">⬛ Black</button><button data-q="tap">👆 Tap</button><button data-q="exit">✕</button>
+      <div class="qrow">
+        <button data-q="sfeer">Sfeer</button><button data-q="rustig">😌 Rustig</button><button data-q="party">Party</button><button data-q="volgas">🔥 Vol gas</button>
+        <button data-q="drop">💥 Drop</button><button data-q="freeze">❄️ Freeze</button><button data-q="bo">⬛ Black</button><button data-q="tap">👆 Tap</button><button data-q="exit">✕</button>
+      </div>
+      <div class="qrow">
+        <button data-q="flash" class="qflash">⚡ FLITS</button>
+        <button data-q="sd1">Elke beat</button><button data-q="sd2">Om de beat</button><button data-q="sd4">Elke 4e</button><button data-q="sd-1">Auto</button>
+        <button data-q="kill">🚫 Strobe uit</button><button data-q="smoke">💨 Rook</button>
+      </div>
     </div>
   </div>
   <aside id="panel">
@@ -114,6 +167,11 @@
     <div class="row"><label for="dStr">Strobe</label><input id="dStr" type="range" min="0" max="100" value="100"><output id="dStrV">100%</output></div>
     <div class="row"><label for="spd">Snelheid scanners</label><input id="spd" type="range" min="25" max="200" value="100"><output id="spdV">100%</output></div>
 
+    <h2>Scannerpatroon</h2>
+    <div class="tgt" id="patTarget"></div>
+    <div id="pats"></div>
+    <p class="astat" id="patstat"></p>
+
     <h2>Scanners op de maat</h2>
     <div class="grid3" id="scanMults"></div>
     <p class="astat">Hoe snel de scanners bewegen ten opzichte van de beat: ½× is één beweging per 2 tellen, 2× twee per tel. Alle patronen lopen strak op de tel.</p>
@@ -127,9 +185,6 @@
     <h2>Kleurthema</h2>
     <div class="grid3" id="themes"></div>
 
-    <h2>Scannerpatroon</h2>
-    <div class="grid3" id="pats"></div>
-    <p class="astat" id="patstat"></p>
 
     <h2>Veiligheid</h2>
     <div class="toggles">
@@ -1473,7 +1528,7 @@
   let smokePower = 0.6;   // rookkracht: 0,1 = zacht pufje, 1 = hard blazen
   const N_SMOKE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ? 160 : 300;   // lichter op telefoon
   const smoke = [];
-  let spawnAcc = 0, burstLeft = 3, cycleT = 0;
+  let spawnAcc = 0, burstLeft = 3, cycleT = 0, uiSmoking = null, uiBp = -1;
   const smokeTint = new THREE.Color(0, 0, 0);
   for (let i = 0; i < N_SMOKE; i++){
     const m = new THREE.SpriteMaterial({map:DOT_TEX, color:0xc4c9d2, transparent:true, opacity:0, depthWrite:false});
@@ -1560,6 +1615,7 @@
       A.peak = b > A.avgB * 1.9 ? 1 : A.peak;
     }
     A.peak = Math.max(0, A.peak - dt * 6);
+    $('micLvl').style.width = (A.stream ? Math.min(100, A.energy * 140) : 0) + '%';
     $('mB').style.width = (A.bass * 100) + '%'; $('mM').style.width = (A.mid * 100) + '%'; $('mH').style.width = (A.high * 100) + '%';
     if (A.intervals.length >= 3){ const est = Math.round(60 / A.period); $('bpmV').textContent = est; }
   }
@@ -1714,16 +1770,38 @@
       if (m === 3) return {bw:1, x:1.5 + s * 5.9 + o * .5, h:2.55 - s * 2.1}; // andere diagonaal
       return {x:1.2 + s * 6.0 + o * .6, y:1.2 + s * 7.8 + o * .3};            // schuin over de vloer
     }}
+    ,
+    // nieuw: rustig
+    adem:    {name:'Adem', same:true, fn:(i, T, b) => { const s = .5 - .5 * Math.cos(Math.PI * b / 8); return {bw:1, x:4.3 + OFFS[i] * (.25 + 2.7 * s), h:1.7 + OFFS[i] * .35 * s}; }},
+    drijven: {name:'Drijven', fn:(i, T) => ({w:1, u:.5 + .3 * Math.sin(T * .35 + i * 1.7), h:1.6 + .55 * Math.sin(T * .27 + i * 2.3)})},
+    // nieuw: vol gas
+    schaar:  {name:'Schaar', same:true, fn:(i, T, b) => { const e = ease(b - Math.floor(b)), s = Math.floor(b) % 2 ? e : 1 - e, x = i < 2 ? 1.3 + s * 6 : 7.3 - s * 6; return {bw:1, x:x + OFFS[i] * .3, h:.9 + (i % 2) * 1.1}; }}
   };
   const OFFS = [-1, -0.33, 0.33, 1];
   const RUSTIG_LIST = ['samenLR','golf','plafond','samenDiag','cirkels','samenOp'];
   const VOL_LIST = ['synchroon','pingpong','flits','samenDiag','explosie','tunnel','regen','pendel','samenLR','spiraal'];
   let lastVolSmoke = -1;
+  // elke scène heeft zijn eigen scannerpatronen (5 per scène, past op de 5 pads van de APC40)
+  const SCENE_PATS = {
+    rustig: ['adem','drijven','golf','plafond','samenOp'],
+    sfeer:  ['waaier','acht','kruis','cirkels','ster'],
+    party:  ['pingpong','pendel','samenLR','samenDiag','tunnel'],
+    volgas: ['synchroon','explosie','schaar','flits','spiraal']
+  };
+  const SCENE_SLIM_BEATS = {rustig:16, sfeer:16, party:8, volgas:8};
+  const sceneSet = () => SCENE_PATS[current === 'chase' ? 'party' : current] || null;
+  const patByScene = {};
+  let patScene = null;
   function scenePattern(bi, t){
     if (dropPhase === 'drop' && DROP_SCENES.includes(current)) return 'explosie';
-    const auto = patSel === 'slim' || patSel === 'auto';
-    if (current === 'rustig') return auto ? RUSTIG_LIST[Math.floor(bi / 16) % RUSTIG_LIST.length] : patSel;
-    if (current === 'volgas') return auto ? VOL_LIST[Math.floor(bi / 8) % VOL_LIST.length] : patSel;
+    const set = sceneSet();
+    if (set){
+      if (set.includes(patSel)) return patSel;
+      const per = SCENE_SLIM_BEATS[current] || 8;
+      // Slim: wisselt binnen de set; bij veel energie sneller
+      const fast = A.on && eS > 0.6 && per > 8;
+      return set[Math.floor(bi / (fast ? per / 2 : per)) % set.length];
+    }
     return activePattern(bi);
   }
   function ease(x){ return x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
@@ -1800,13 +1878,14 @@
     } else { beat = t * bpm / 60; f = bpm / 120; }
     const bi = Math.floor(beat), ph = beat - bi;
     nowT = t; beatNow = beat;
+    { const bp = Math.round(Math.pow(1 - ph, 2.2) * 20) / 20; if (bp !== uiBp){ uiBp = bp; document.documentElement.style.setProperty('--bp', bp); } }
     // beat-teller voor de scanners: loopt mee met de beat × gekozen tempo (½×, 1×, 2×) × snelheid-fader
     if (lastBeatVal !== null){ const dB = Math.min(1, Math.max(0, beat - lastBeatVal)); syncT += dB * scanMult * speedMul * (1 + buildProg()); }
     lastBeatVal = beat;
     smartUpdate(bi, dt);
     dropTick(dt, bi, beat);
     progTick(t);
-    patStatus(bi, t);
+    patStatus(bi, t); patLive(bi, t);
     mt += dt * f * (A.on ? (0.6 + 1.2 * A.energy) : 1) * (1 + 1.6 * buildProg()) * speedMul;
     const pulse = A.on ? Math.max(0.15, A.bass) : 1 - ph * 0.4;
 
@@ -1916,7 +1995,7 @@
     $('flashBtn').classList.toggle('hit', flash); qFlash.classList.toggle('hit', flash);
     strobeLight.intensity = flash ? 7 * master * dimStr : 0;
     strobePanel.material.color.setScalar(flash ? 0.13 + 0.87 * dimStr : 0.13);
-    if (flash !== lastFlashLed){ lastFlashLed = flash; ledDirty = true; }
+    if (flash !== lastFlashLed){ lastFlashLed = flash; ledDirty = true; document.body.classList.toggle('flashing', flash); }
 
     // Sfeerplafond
     const ambK = (ambOn && !boOn && current !== 'blackout' && current !== 'strobe') ? master * dimAmb * (dropPhase === 'gap' ? 0.1 : 1) : 0;
@@ -1949,6 +2028,7 @@
     if (smokeOn && smokeDiv > 0 && bi % smokeDiv === 0 && bi !== cycleT){ cycleT = bi; burstLeft = Math.max(burstLeft, Math.min(2, beatSec)); }   // gekozen ritme: 1 tel rook
     if (smokeOn && smokeHold) burstLeft = Math.max(burstLeft, 0.15);                  // rookknop ingedrukt houden
     const firing = burstLeft > 0;
+    if (firing !== uiSmoking){ uiSmoking = firing; document.body.classList.toggle('smoking', firing); }
     if (firing) burstLeft -= dt;
     haze = firing ? Math.min(1, haze + dt * 0.08 * (0.3 + smokePower * 1.2)) : Math.max(0, haze - dt * (smokeOn ? 0.012 : 0.035));
     haze = Math.max(haze, hazeFloor);                                                // knop 3: vaste hoeveelheid nevel
@@ -2001,13 +2081,71 @@
     const b = document.createElement('button'); b.textContent = name; b.dataset.id = id;
     b.onclick = () => { if (progRun) stopProg('Programma gestopt, je koos zelf een scène.'); current = id; refresh(); }; scenesEl.appendChild(b);
   });
-  const patsEl = $('pats');
-  [['slim','🎧 Slim'], ['auto','Auto']].concat(Object.keys(PATTERNS).map(k => [k, PATTERNS[k].name])).forEach(([id, name]) => {
-    const b = document.createElement('button'); b.textContent = name; b.dataset.id = id;
-    b.onclick = () => { patSel = id; lastAuto = ''; refreshPats(); }; patsEl.appendChild(b);
+  const patsEl = $('pats'), patTgtEl = $('patTarget');
+  const PAT_SCENE_NAME = {rustig:'😌 Rustig', sfeer:'Sfeer', party:'Party', volgas:'🔥 Vol gas', chase:'Chase (Party-patronen)'};
+  const PAT_ICON = {adem:'🫁', drijven:'🍃', golf:'🌊', plafond:'☁', samenOp:'↕', waaier:'🪭', acht:'∞', kruis:'✖', cirkels:'⭕', ster:'⭐',
+    pingpong:'🏓', pendel:'⏱', samenLR:'↔', samenDiag:'↗', tunnel:'🌀', synchroon:'🔀', explosie:'💥', schaar:'✂', flits:'⚡', spiraal:'🌪', regen:'🌧'};
+  const SHORT = {samenLR:'Links-rechts', samenDiag:'Diagonaal', samenOp:'Op en neer', synchroon:'Synchroon', ster:'Ster'};
+  const patShort = id => id === 'slim' ? 'Slim' : (SHORT[id] || PATTERNS[id].name);
+  let patTarget = 'all';   // 'all' of A/B/C/D
+  ['all'].concat(SCAN_KEYS).forEach(k => {
+    const b = document.createElement('button'); b.dataset.k = k;
+    b.innerHTML = '<b>' + (k === 'all' ? 'Alle' : k) + '</b><small></small>';
+    b.title = k === 'all' ? 'Patroon voor alle scanners' : 'Eigen patroon voor scanner ' + k;
+    b.onclick = () => { patTarget = k; patLiveKey = ''; };
+    patTgtEl.appendChild(b);
   });
-  function refreshPats(){ patsEl.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.id === patSel)); }
-  refreshPats();
+  function pickPattern(id){
+    if (patTarget === 'all'){ setPattern(patSel === id ? 'slim' : id); clearOverrides(); }
+    else { const k = patTarget; scanOverride[k] = (id === 'slim' || scanOverride[k] === id) ? null : id; }
+    lastAuto = ''; patLiveKey = ''; ledDirty = true;
+  }
+  function buildPats(){
+    const set = sceneSet();
+    patsEl.innerHTML = '';
+    patTgtEl.style.display = set ? '' : 'none';
+    if (!set){ const p = document.createElement('p'); p.className = 'astat'; p.textContent = 'In deze scène bewegen de scanners zonder patronen. Kies Rustig, Sfeer, Party of Vol gas.'; patsEl.appendChild(p); return; }
+    const h = document.createElement('div'); h.className = 'pgrp';
+    h.innerHTML = '<span>Patronen voor ' + (PAT_SCENE_NAME[current] || current) + '</span><span>' + (current === 'rustig' || current === 'sfeer' ? 'langzaam, op de maat' : 'strak op de beat') + '</span>';
+    patsEl.appendChild(h);
+    const g = document.createElement('div'); g.className = 'grid3'; patsEl.appendChild(g);
+    [['slim', '🎧 Slim']].concat(set.map(id => [id, (PAT_ICON[id] || '') + ' ' + patShort(id)])).forEach(([id, name]) => {
+      const b = document.createElement('button'); b.textContent = name; b.dataset.id = id;
+      b.onclick = () => pickPattern(id); g.appendChild(b);
+    });
+  }
+  let patLiveKey = '';
+  function refreshPats(liveNow){
+    const sel = patTarget === 'all' ? patSel : (scanOverride[patTarget] || 'slim');
+    patsEl.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('on', b.dataset.id === sel);
+      b.classList.toggle('live', !!liveNow && b.dataset.id === liveNow[patTarget === 'all' ? 'A' : patTarget]);
+    });
+    patTgtEl.querySelectorAll('button').forEach(b => {
+      const k = b.dataset.k;
+      b.classList.toggle('on', k === patTarget);
+      b.classList.toggle('own', k !== 'all' && !!scanOverride[k]);
+      b.querySelector('small').textContent = k === 'all' ? patShort(patSel) : (scanOverride[k] ? patShort(scanOverride[k]) : 'volgt');
+    });
+    const sb = patsEl.querySelector('[data-id="slim"]'); if (sb) sb.textContent = patTarget === 'all' ? '🎧 Slim' : '↩ Volgt Alle';
+  }
+  function patLive(bi, t){
+    // andere scène gekozen: onthoud het patroon per scène en laat alleen patronen van deze scène toe
+    if (current !== patScene){
+      if (patScene) patByScene[patScene] = patSel;
+      patScene = current;
+      const set = sceneSet();
+      if (set){
+        patSel = set.includes(patByScene[current]) ? patByScene[current] : 'slim';
+        SCAN_KEYS.forEach(k => { if (scanOverride[k] && !set.includes(scanOverride[k])) scanOverride[k] = null; });
+      }
+      buildPats(); patLiveKey = ''; lastAuto = ''; ledDirty = true;
+    }
+    const base = scenePattern(bi, t), live = {};
+    SCAN_KEYS.forEach(k => live[k] = (scanOverride[k] && !(dropPhase === 'drop' && DROP_SCENES.includes(current))) ? scanOverride[k] : base);
+    const key = current + '|' + patTarget + '|' + patSel + '|' + SCAN_KEYS.map(k => live[k] + ':' + (scanOverride[k] || '')).join(',');
+    if (key !== patLiveKey){ patLiveKey = key; refreshPats(live); ledDirty = true; }
+  }
   function patStatus(bi, t){
     const now = scenePattern(bi, t), key = now + '|' + smartMood + '|' + patSel + '|' + current + '|' + dropPhase;
     if (key === lastAuto) return; lastAuto = key;
@@ -2016,8 +2154,11 @@
         : dropPhase === 'gap' ? '⬛ Stilte voor de drop…' : '💥 DROP! Explosie, strobe en rook.';
       return;
     }
-    if ((current === 'rustig' || current === 'volgas') && (patSel === 'slim' || patSel === 'auto')){
-      $('patstat').textContent = (current === 'rustig' ? 'Rustig: zachte patronen op halve snelheid van de beat, nu ' : 'Vol gas: elke 8 tellen een nieuw krachtig patroon, nu ') + PATTERNS[now].name + '.';
+    if (sceneSet()){
+      const per = SCENE_SLIM_BEATS[current] || 8;
+      $('patstat').textContent = sceneSet().includes(patSel)
+        ? 'Vast patroon: ' + PATTERNS[now].name + '. Druk nog eens om terug te gaan naar Slim.'
+        : 'Slim: wisselt elke ' + per + ' tellen tussen de ' + sceneSet().length + ' patronen van deze scène, nu ' + PATTERNS[now].name + '.';
       return;
     }
     if (patSel === 'slim'){
@@ -2121,14 +2262,15 @@
     $('boBtn').classList.toggle('on', boOn); $('frBtn').classList.toggle('on', freeze); $('skBtn').classList.toggle('on', strobeKill);
     document.querySelectorAll('#quick [data-q]').forEach(b => {
       const q = b.dataset.q;
-      b.classList.toggle('on', (q === current) || (q === 'bo' && boOn) || (q === 'freeze' && freeze) || (q === 'kill' && strobeKill) || (q === 'drop' && dropPhase !== 'none'));
+      if (q === 'smoke' || q === 'flash') return;
+      b.classList.toggle('on', (q === current) || (q === 'bo' && boOn) || (q === 'freeze' && freeze) || (q === 'kill' && strobeKill) || (q === 'drop' && dropPhase !== 'none') || (q.startsWith('sd') && +q.slice(2) === strobeDiv));
     });
     sdEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.d === strobeDiv));
     ledDirty = true;
   }
   function setScene(id){ if (progRun) stopProg('Programma gestopt, je koos zelf een scène.'); current = id; refresh(); }
   function setTheme(id){ theme = id; PAL = toCols(THEMES[id].pal); CALM = toCols(THEMES[id].calm); themesEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.id === theme)); ledDirty = true; }
-  function setPattern(id){ patSel = id; lastAuto = ''; refreshPats(); ledDirty = true; }
+  function setPattern(id){ patSel = id; patByScene[current] = id; lastAuto = ''; patLiveKey = ''; ledDirty = true; }
   function setStrobeDiv(d){ strobeDiv = d; syncUI(); }
   function doDrop(){ if (!DROP_SCENES.includes(current)) setScene('party'); manualDrop = true; dropPhase = 'build'; phaseStart = beatNow; ledDirty = true; }
   function toggleMute(i){
@@ -2198,6 +2340,12 @@
       ['pointerup','pointerleave','pointercancel'].forEach(ev => b.addEventListener(ev, () => { manualHold = false; }));
       return;
     }
+    if (q === 'smoke'){
+      b.addEventListener('pointerdown', e => { e.preventDefault(); smokeHold = true; if (!smokeOn) setSmokeDiv(smokeDiv); b.classList.add('on'); });
+      ['pointerup','pointerleave','pointercancel'].forEach(ev => b.addEventListener(ev, () => { smokeHold = false; b.classList.remove('on'); }));
+      return;
+    }
+    if (q.startsWith('sd')){ b.onclick = () => setStrobeDiv(+q.slice(2)); return; }
     b.onclick = () => {
       if (q === 'exit') setShow(false); else if (q === 'drop') doDrop(); else if (q === 'kill') toggleKill();
       else if (q === 'freeze') toggleFreeze(); else if (q === 'bo') toggleBo(); else if (q === 'tap') tapTempo(); else setScene(q);
@@ -2223,7 +2371,8 @@
   const SCENE_COL = {blackout:'grey', rustig:'blue', sfeer:'orange', party:'pink', volgas:'red', chase:'yellow', strobe:'white', wit:'white'};
   const THEME_COL = {regenboog:'pink', zonsondergang:'orange', oceaan:'blue', tropisch:'green', warmwit:'yellow'};
   const THEME_IDS = Object.keys(THEMES);
-  const FAV = ['slim','samenLR','synchroon','kruis','explosie'];               // scannerpatronen op de pads, van boven naar onder (Slim = automatisch op de muziek)
+  const FAV_OLD = ['slim','samenLR','synchroon','kruis','explosie'];
+  const favs = () => sceneSet() || FAV_OLD;   // de 5 pads = de 5 patronen van de gekozen scène; actieve pad nogmaals = Slim               // scannerpatronen op de pads, van boven naar onder (Slim = automatisch op de muziek)
   const COL8_SCENES = ['sfeer','rustig','party','volgas'];                     // kolom 8 van boven naar onder; 5e pad = alles fel (vasthouden)
   const STROBE_TOP = [null, 1, 2, 4, -1];                                      // kolom 1 (boven → onder): FLITS, elke beat, om de beat, elke 4e beat, Auto (scène)
   const SMOKE_TOP = [null, null, 8, 16, -1];                                   // kolom 7: rook vasthouden, stoot 3 s, elke 8, elke 16 tellen, Auto
@@ -2236,11 +2385,15 @@
       if (top === 0) return lastFlashLed ? 'white' : 'orange';
       return STROBE_TOP[top] === strobeDiv ? '*yellow' : 'yellow';
     }
-    if (col === 1) return (FAV[top] === patSel && !Object.values(scanOverride).some(Boolean)) ? '*green' : 'green';
+    if (col === 1){
+      const id = favs()[top], live = scenePattern(Math.floor(beatNow), nowT);
+      if (id === patSel) return '*green';                       // vast gekozen = groen pulserend
+      return (patSel === 'slim' && id === live) ? '*yellow' : 'green';   // Slim: het patroon dat nu speelt pulseert geel
+    }
     if (col >= 2 && col <= 5){
       const k = SCAN_KEYS[col - 2], own = scanOverride[k];
       if (scanTest[k]) return 'white';
-      return own === FAV[top] ? '*cyan' : (!own && FAV[top] === patSel ? '*green' : 'cyan');   // eigen patroon = cyaan pulserend, volgt kolom 2 = groen pulserend
+      const id = favs()[top]; return own === id ? '*cyan' : (!own && id === patSel ? '*green' : 'cyan');   // eigen patroon = cyaan pulserend, volgt kolom 2 = groen pulserend
     }
     if (col === 6){
       if (top === 0) return smokeHold ? 'white' : 'purple';
@@ -2324,9 +2477,9 @@
       if (top === 0){ manualHold = true; fireManual(nowT); }                          // handmatige flits (vasthouden = blijven flitsen)
       else setStrobeDiv(strobeDiv === STROBE_TOP[top] ? -1 : STROBE_TOP[top]);       // nogmaals = terug naar Auto
     } else if (col === 1){
-      clearOverrides(); setPattern(FAV[top]);                                         // alle scanners
+      const id = favs()[top]; clearOverrides(); setPattern(patSel === id && id !== 'slim' ? 'slim' : id);   // alle scanners; nogmaals = Slim
     } else if (col <= 5){
-      const k = SCAN_KEYS[col - 2]; scanOverride[k] = (FAV[top] === 'slim' || scanOverride[k] === FAV[top]) ? null : FAV[top];   // Slim = volgt kolom 2
+      const k = SCAN_KEYS[col - 2], id = favs()[top]; scanOverride[k] = (id === 'slim' || scanOverride[k] === id) ? null : id;   // nogmaals = volgt kolom 2
     } else if (col === 6){
       if (top === 0){ smokeHold = true; if (!smokeOn) setSmokeDiv(smokeDiv); }
       else if (top === 1){ if (!smokeOn) setSmokeDiv(smokeDiv); burstLeft = Math.max(burstLeft, 3); }
@@ -2453,7 +2606,14 @@
   refresh();
   $('bpm').oninput = e => { bpm = +e.target.value; $('bpmV').textContent = bpm; };
   const astat = $('astat');
-  function markAudio(which){ $('mic').classList.toggle('on', which === 'mic'); document.querySelector('.filebtn').classList.toggle('on', which === 'file'); }
+  function markAudio(which){ $('mic').classList.toggle('on', which === 'mic'); $('topMic').classList.toggle('on', which === 'mic'); document.querySelector('.filebtn').classList.toggle('on', which === 'file'); }
+  let topMsgT = 0;
+  function showTopMsg(){ const m = $('topMsg'); m.textContent = astat.textContent; m.classList.add('show'); clearTimeout(topMsgT); topMsgT = setTimeout(() => m.classList.remove('show'), 6000); }
+  $('topMic').onclick = async () => {
+    if (A.on && A.stream){ $('astop').click(); $('micLvl').style.width = '0'; }
+    else { await $('mic').onclick(); }
+    showTopMsg();
+  };
   $('mic').onclick = async () => {
     try {
       await audioInit(); audioStop();
@@ -2520,6 +2680,149 @@
   fxSel.onchange = () => { sel = fxSel.value; sync(); placeAll(); };
   $('reset').onclick = () => { for (const k in FX) FX[k].pos = Object.assign({}, FX[k].def); sync(); placeAll(); save(); };
   sync(); placeAll();
+
+  // ---------- Taal / Language (NL ↔ EN) ----------
+  // Vertaalt alle teksten op het scherm, ook teksten die later veranderen (statusregels, APC40-meldingen).
+  const I18N = [
+    // kop en algemeen
+    ['Huiskamer Madeira — lichtopstelling','Madeira living room — light setup'],
+    ['Simulatie · nog niet live gekoppeld aan SoundSwitch · sleep om te draaien, scroll om te zoomen','Simulation · not live-linked to SoundSwitch yet · drag to rotate, scroll to zoom'],
+    // scènes
+    ['Scène','Scene'],['Rustig','Calm'],['Sfeer','Ambience'],['Vol gas','Full throttle'],['Wit / test','White / test'],
+    ['Chase (Party-patronen)','Chase (Party patterns)'],
+    // strobe
+    ['Ritme op de beat (geldt in elke scène). Auto: de scène bepaalt zelf wanneer hij flitst.','Rhythm on the beat (works in every scene). Auto: the scene decides when it flashes.'],
+    ['🥁 Roffel (vasthouden: versnelt op de maat)','🥁 Roll (hold: speeds up on the beat)'],
+    ['tik = één flits · ingedrukt houden = blijven flitsen · of spatiebalk','tap = one flash · hold = keep flashing · or space bar'],
+    ['FLITS','FLASH'],['Flits','Flash'],
+    ['(opbouw → stilte → knal)','(build-up → silence → bang)'],
+    ['Elke ½ beat','Every ½ beat'],['Elke beat','Every beat'],['Om de beat','Every other beat'],['Elke 4e beat','Every 4th beat'],['Elke 4e','Every 4th'],
+    ['Auto (scène)','Auto (scene)'],['Strobe uit','Strobe off'],['Strobe beperkt','Strobe limited'],
+    // live
+    ['Live bediening','Live control'],['Tap tempo','Tap tempo'],['Showmodus','Show mode'],
+    ['Snelheid scanners','Scanner speed'],['Sfeerlicht','Ambient light'],['Scanners','Scanners'],['Lampen los aan/uit (op de APC40: de Clip Stop-knoppen 1–8):','Lamps on/off one by one (on the APC40: Clip Stop buttons 1–8):'],
+    ['Sneltoetsen: 1–8 scènes · B blackout · F freeze · D drop · T tap tempo · S strobe uit · spatie flits · Esc showmodus uit.','Shortcuts: 1–8 scenes · B blackout · F freeze · D drop · T tap tempo · S strobe off · space flash · Esc leave show mode.'],
+    // patronen
+    ['Scannerpatroon','Scanner pattern'],['Scanners op de maat','Scanners on the beat'],
+    ['Patronen voor','Patterns for'],['langzaam, op de maat','slow, on the beat'],['strak op de beat','tight on the beat'],
+    ['In deze scène bewegen de scanners zonder patronen. Kies Rustig, Sfeer, Party of Vol gas.','In this scene the scanners move without patterns. Choose Calm, Ambience, Party or Full throttle.'],
+    ['Eigen patroon voor scanner','Own pattern for scanner'],['Patroon voor alle scanners','Pattern for all scanners'],
+    ['Alle','All'],['volgt','follows'],['↩ Volgt Alle','↩ Follows All'],['Slim','Smart'],
+    ['Slim: wisselt elke','Smart: changes every'],['tellen tussen de','beats between the'],['patronen van deze scène, nu','patterns of this scene, now'],
+    ['Vast patroon:','Fixed pattern:'],['Druk nog eens om terug te gaan naar Slim.','Press again to go back to Smart.'],
+    ['Slim: herkent','Smart: detects'],['Kiest zelf patronen bij het soort muziek en reageert op drops.','Picks patterns to suit the music and reacts to drops.'],
+    ['Zet de microfoon of een nummer aan, dan luistert hij naar de muziek.','Turn on the microphone or a song and it listens to the music.'],
+    ['Auto: nu','Auto: now'],['Wisselt elke 16 tellen naar het volgende patroon.','Switches to the next pattern every 16 beats.'],
+    ['Patroon:','Pattern:'],['Werkt in alle scènes behalve Blackout, Strobe en Wit.','Works in all scenes except Blackout, Strobe and White.'],
+    ['⬆️ Opbouw: de spanning stijgt, de scanners versnellen…','⬆️ Build-up: tension rises, the scanners speed up…'],
+    ['⬛ Stilte voor de drop…','⬛ Silence before the drop…'],['💥 DROP! Explosie, strobe en rook.','💥 DROP! Explosion, strobe and smoke.'],
+    ['Adem','Breathe'],['Drijven','Drift'],['Golf','Wave'],['Plafond','Ceiling'],['Op en neer','Up and down'],['Samen op/neer','Together up/down'],
+    ['Waaier','Fan'],['Acht','Figure 8'],['Kruis','Cross'],['Cirkels','Circles'],['Ster (vloer)','Star (floor)'],['Ster','Star'],
+    ['Pendel','Pendulum'],['Links-rechts','Left-right'],['Samen ↔','Together ↔'],['Samen diagonaal','Together diagonal'],['Diagonaal','Diagonal'],
+    ['Synchroon mix','Sync mix'],['Synchroon','Sync'],['Explosie','Explosion'],['Schaar','Scissors'],['Spiraal','Spiral'],['Regen','Rain'],
+    ['½× (rustig)','½× (calm)'],['1× (op de tel)','1× (on the beat)'],['2× (dubbel)','2× (double)'],
+    ['Hoe snel de scanners bewegen ten opzichte van de beat: ½× is één beweging per 2 tellen, 2× twee per tel. Alle patronen lopen strak op de tel.','How fast the scanners move relative to the beat: ½× is one move per 2 beats, 2× two per beat. All patterns stay tight on the beat.'],
+    // rook
+    ['💨 Rook (vasthouden = rook zolang je drukt)','💨 Smoke (hold = smoke while pressed)'],['Kracht (zacht ↔ hard)','Power (soft ↔ hard)'],
+    ['Auto: de scène bepaalt het (o.a. bij drops). Bij een eigen ritme geeft de machine op die tel 1 tel rook.','Auto: the scene decides (e.g. on drops). With your own rhythm the machine gives 1 beat of smoke on that beat.'],
+    ['Elke 8 tellen','Every 8 beats'],['Elke 16 tellen','Every 16 beats'],['Elke 32 tellen','Every 32 beats'],['Alleen handmatig','Manual only'],
+    ['Rook uit','Smoke off'],['Rook zuinig','Smoke saver'],['Rookmachine (F)','Smoke machine (F)'],['Rookstoot!','Smoke burst!'],['Rook','Smoke'],
+    // thema's
+    ['Kleurthema','Colour theme'],['Regenboog','Rainbow'],['Zonsondergang','Sunset'],['Oceaan','Ocean'],['Tropisch','Tropical'],['Warm wit','Warm white'],
+    // veiligheid
+    ['Veiligheid','Safety'],['Oogveilig','Eye-safe'],
+    ['Oogveilig: bundels op de muren blijven boven 1,95 m. Strobe beperkt: max. 3 flitsen per seconde en 8 per 10 seconden. Rook zuinig: automatische stoten max. 2 s, minstens 40 s ertussen.','Eye-safe: beams on the walls stay above 1.95 m. Strobe limited: max. 3 flashes per second and 8 per 10 seconds. Smoke saver: automatic bursts max. 2 s, at least 40 s apart.'],
+    // programma
+    ['Avondprogramma','Evening programme'],['▶ Start programma','▶ Start programme'],['Snel bekijken','Quick preview'],
+    ['Stel de onderdelen van je avond in en druk op Start. De lichtshow wisselt dan vanzelf van scène. "Snel bekijken" speelt de hele avond af in seconden in plaats van minuten.','Set up the parts of your evening and press Start. The light show then changes scene by itself. "Quick preview" plays the whole evening in seconds instead of minutes.'],
+    ['Programma gestopt, je koos zelf een scène.','Programme stopped, you picked a scene yourself.'],['Programma gestopt.','Programme stopped.'],
+    ['Het avondprogramma is klaar. Welterusten!','The evening programme is finished. Good night!'],
+    ['Nu:','Now:'],['daarna einde','then end'],['daarna','then'],['nog','left'],['(snel)','(fast)'],['minuten','minutes'],
+    // tempo & muziek
+    ['Tempo & licht','Tempo & light'],['Kamerlicht','Room light'],['Sfeerlicht (f + g)','Ambient light (f + g)'],
+    ['Op de muziek','To the music'],['Microfoon aan/uit','Microphone on/off'],['Microfoon','Microphone'],['Nummer kiezen','Choose song'],['Stop','Stop'],
+    ['Licht volgt nu de BPM-schuif. Kies een nummer of zet de microfoon aan om het op de muziek te laten bewegen.','Lights now follow the BPM slider. Choose a song or turn on the microphone to make them move to the music.'],
+    ['Licht volgt weer de BPM-schuif.','Lights follow the BPM slider again.'],
+    ['Microfoon staat aan. Zet de muziek hard genoeg; de lampen volgen de bas, de strobe de pieken.','Microphone is on. Play the music loud enough; the lamps follow the bass, the strobe the peaks.'],
+    ['De microfoon is hier geblokkeerd. In deze gedeelde pagina staat claude.ai geen microfoon toe. Kies hieronder een nummer, of open het losse bestand van deze pagina in Chrome op je Mac, daar werkt de microfoon wel.','The microphone is blocked here. claude.ai does not allow the microphone on this shared page. Choose a song below, or open the standalone file of this page in Chrome on your Mac, where the microphone does work.'],
+    ['Dit nummer kon niet worden afgespeeld. Probeer een mp3- of m4a-bestand.','This song could not be played. Try an mp3 or m4a file.'],
+    ['Speelt:','Playing:'],['De lampen bewegen mee op de beat.','The lamps move along with the beat.'],
+    // camera en kamer
+    ['Camera','Camera'],['Overzicht','Overview'],['Bovenaf','From above'],['Vanuit de nis','From the alcove'],['Op de tekening','On the drawing'],['Terug naar tekening','Back to drawing'],
+    ['Positie aanpassen','Adjust position'],['Links ↔ rechts','Left ↔ right'],['Onder ↔ boven','Bottom ↔ top'],['Hoogte','Height'],
+    ['Maten volgens je tekening: 8 m aan de onderkant, 7 m aan de achterkant, rechterwand 10 m, schuine linkerwand ±8 m onder 130°, nis 6 m breed, plafond 2,80 m. De tekening is niet op schaal, dus de diepte van de nis (±3 m) en de hoogtes van de lampen zijn geschat. Pas ze aan met de schuifjes, je browser onthoudt ze.','Dimensions from your drawing: 8 m at the bottom, 7 m at the back, right wall 10 m, slanted left wall ±8 m at 130°, alcove 6 m wide, ceiling 2.80 m. The drawing is not to scale, so the depth of the alcove (±3 m) and the lamp heights are estimates. Adjust them with the sliders; your browser remembers them.'],
+    ['The Winner II scanners, in de nis','The Winner II scanners, in the alcove'],['SP-1500 DMX stroboscoop','SP-1500 DMX strobe'],['stroboscoop','strobe'],
+    ['losse lichtunits met sfeerlichtjes op plafond (f bij de gang, g rechtsboven)','separate light units with small ambient ceiling lights (f by the corridor, g top right)'],
+    ['rookmachine, naast de speaker bij de nis','smoke machine, next to the speaker by the alcove'],['rookmachine','smoke machine'],
+    ['sfeerlicht plafond (bij de gang)','ambient ceiling light (by the corridor)'],['sfeerlicht plafond','ambient ceiling light'],
+    ['speaker boven','speaker top'],['speaker onder','speaker bottom'],['speakers','speakers'],['lamp','lamp'],
+    // APC40
+    ['APC40 koppelen','Connect APC40'],['APC40 losgekoppeld.','APC40 disconnected.'],
+    ['APC40 gekoppeld, ingedeeld als mengpaneel. Kolom 1: strobe · 2: alle scanners · 3–6: scanner A, B, C, D · 7: rook · 8: scènes (boven → onder: Sfeer, Rustig, Party, Vol gas, alles fel zolang je vasthoudt). Per kolom: knop boven, 5 pads, Clip Stop (aan/uit), lange knop, cijferknop en fader. Masterfader = dimmer.','APC40 connected, laid out as a mixer. Column 1: strobe · 2: all scanners · 3–6: scanner A, B, C, D · 7: smoke · 8: scenes (top → bottom: Ambience, Calm, Party, Full throttle, everything bright while held). Per column: top knob, 5 pads, Clip Stop (on/off), long button, number button and fader. Master fader = dimmer.'],
+    ['Deze browser kan geen MIDI-apparaten lezen. Gebruik Chrome op je Mac; op de iPhone kan dit niet.','This browser cannot read MIDI devices. Use Chrome on your Mac; this is not possible on the iPhone.'],
+    ['Geen toegang tot MIDI. Sta MIDI toe voor deze pagina (slotje links in de adresbalk) en probeer opnieuw.','No access to MIDI. Allow MIDI for this page (padlock at the left of the address bar) and try again.'],
+    ["Geen APC40 gevonden. Sluit hem aan via USB, sluit andere programma's die hem gebruiken (zoals Ableton of SoundSwitch) en druk opnieuw op de knop.","No APC40 found. Connect it via USB, close other programs using it (such as Ableton or SoundSwitch) and press the button again."],
+    ['let op: APC40 staat niet in de juiste modus (geen SysEx-toestemming)','note: APC40 is not in the right mode (no SysEx permission)'],
+    ['MIDI ontvangen','MIDI received'],['kolom','column'],['Knop','Knob'],['knop','button'],
+    ['Flitssnelheid (FLITS vasthouden)','Flash rate (hold FLASH)'],['per sec','per sec'],['(max 3 zolang Strobe beperkt aan staat)','(max 3 while Strobe limited is on)'],
+    ['Snelheid alle scanners','Speed all scanners'],['Kleur scanner','Colour scanner'],['volgt de rest','follows the rest'],['eigen kleur','own colour'],
+    ['Nevel','Haze'],['Kleur sfeerlicht','Colour ambient light'],['automatisch','automatic'],['vaste kleur','fixed colour'],
+    ['Alle scanners','All scanners'],['Rookkracht','Smoke power'],['Masterfader','Master fader'],
+    ['Bundelbreedte','Beam width'],['Grootte beweging','Movement size'],['Overgangstijd','Transition time'],
+    ['(microfoon bepaalt nu het tempo)','(microphone now sets the tempo)'],['Kleur alle scanners','Colour all scanners'],['themakleuren','theme colours'],
+    // showmodus / overig
+    ['Black','Black'],['Freeze','Freeze'],['Tap','Tap']
+  ];
+  const I18N_RE = (() => {
+    const esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const keys = I18N.map(p => p[0]).sort((a, b) => b.length - a.length);
+    return new RegExp('(?<![\\p{L}\\p{N}])(' + keys.map(esc).join('|') + ')(?![\\p{L}\\p{N}])', 'gu');
+  })();
+  const I18N_MAP = new Map(I18N);
+  let lang = 'nl';
+  try { lang = localStorage.getItem('madeira-taal') || 'nl'; } catch(e){}
+  const trEN = t => t.replace(I18N_RE, m => I18N_MAP.get(m) ?? m);
+  const I18N_ATTRS = ['title', 'placeholder', 'aria-label'];
+  function trText(n){
+    const t = n.nodeValue; if (!t || !t.trim() || n.__en === t) return;
+    const p = n.parentNode; if (p && (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE')) return;
+    n.__nl = t; const en = trEN(t); n.__en = en; if (en !== t) n.nodeValue = en;
+  }
+  function trAttrs(el){
+    I18N_ATTRS.forEach(a => {
+      const v = el.getAttribute && el.getAttribute(a); if (!v) return;
+      el.__nlA = el.__nlA || {}; el.__enA = el.__enA || {};
+      if (el.__enA[a] === v) return;
+      el.__nlA[a] = v; const en = trEN(v); el.__enA[a] = en; if (en !== v) el.setAttribute(a, en);
+    });
+  }
+  function trTree(root){
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+    while ((n = w.nextNode())) trText(n);
+    if (root.querySelectorAll){ trAttrs(root); root.querySelectorAll('[title],[placeholder],[aria-label]').forEach(trAttrs); }
+  }
+  function restoreNL(root){
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+    while ((n = w.nextNode())){ if (n.__nl !== undefined && n.__en === n.nodeValue) n.nodeValue = n.__nl; n.__en = n.__nl = undefined; }
+    root.querySelectorAll('*').forEach(el => { if (el.__nlA) Object.keys(el.__nlA).forEach(a => { if (el.getAttribute(a) === el.__enA[a]) el.setAttribute(a, el.__nlA[a]); }); el.__nlA = el.__enA = undefined; });
+  }
+  const i18nObs = new MutationObserver(muts => {
+    if (lang !== 'en') return;
+    muts.forEach(m => {
+      if (m.type === 'characterData') trText(m.target);
+      else if (m.type === 'attributes') trAttrs(m.target);
+      else m.addedNodes.forEach(n => n.nodeType === 3 ? trText(n) : n.nodeType === 1 && trTree(n));
+    });
+  });
+  i18nObs.observe(document.body, {subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:I18N_ATTRS});
+  function setLang(l){
+    lang = l; try { localStorage.setItem('madeira-taal', l); } catch(e){}
+    document.documentElement.lang = l;
+    if (l === 'en') trTree(document.body); else restoreNL(document.body);
+    document.querySelectorAll('#langSel button').forEach(b => b.classList.toggle('on', b.dataset.l === l));
+  }
+  document.querySelectorAll('#langSel button').forEach(b => b.onclick = () => setLang(b.dataset.l));
+  setLang(lang);
 
   // ---------- Loop ----------
   function resize(){
