@@ -41,6 +41,22 @@
   .meters div{height:6px;background:#1c1f27;border-radius:3px;overflow:hidden}
   .meters i{display:block;height:100%;width:0;background:var(--accent);transition:width .05s linear}
   .astat{color:var(--muted);font-size:12px;margin:6px 0 0;line-height:1.45}
+  .prow{display:grid;grid-template-columns:1fr 1fr 58px;gap:6px;margin:4px 0}
+  .prow input,.prow select{width:100%;background:#1c1f27;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px;font:inherit;font-size:13px}
+  .prow.now input,.prow.now select{border-color:var(--accent)}
+  .flashbtn{display:block;width:100%;margin-top:8px;padding:22px 8px;font-size:22px;font-weight:700;letter-spacing:1px;background:#2a2d36;border:2px solid #f5f5f5;border-radius:12px;user-select:none;-webkit-user-select:none;touch-action:none}
+  .flashbtn span{font-size:11px;font-weight:400;letter-spacing:0;opacity:.7}
+  .flashbtn.hit{background:#fff;color:#000}
+  .mutes{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:6px}
+  .mutes button{padding:8px 0;font-size:12px}
+  .mutes button.off{opacity:.35;text-decoration:line-through}
+  #quick{display:none}
+  body.show #panel{display:none}
+  body.show #hud p{display:none}
+  body.show #quick{display:flex;position:absolute;left:0;right:0;bottom:0;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(10,11,15,.82);backdrop-filter:blur(6px);overflow-x:auto}
+  #quick button{flex:1 0 auto;padding:14px 12px;font-size:15px;white-space:nowrap;user-select:none;-webkit-user-select:none;touch-action:none}
+  #quick .qflash{border:2px solid #f5f5f5;font-weight:700}
+  #quick .qflash.hit{background:#fff;color:#000}
   .legend{display:grid;grid-template-columns:22px 1fr;gap:4px 6px;font-size:12px;color:var(--muted)}
   .legend b{color:var(--text);font-weight:600}
   .note{color:var(--muted);font-size:12px;margin-top:14px;line-height:1.5}
@@ -62,14 +78,74 @@
       <h1>Huiskamer Madeira — lichtopstelling</h1>
       <p>Simulatie · nog niet live gekoppeld aan SoundSwitch · sleep om te draaien, scroll om te zoomen</p>
     </div>
+    <div id="quick">
+      <button data-q="rustig">😌 Rustig</button><button data-q="party">Party</button><button data-q="volgas">🔥 Vol gas</button>
+      <button data-q="drop">💥 Drop</button><button data-q="flash" class="qflash">⚡ FLITS</button><button data-q="kill">🚫 Strobe</button>
+      <button data-q="freeze">❄️ Freeze</button><button data-q="bo">⬛ Black</button><button data-q="tap">👆 Tap</button><button data-q="exit">✕</button>
+    </div>
   </div>
   <aside id="panel">
     <h2>Scène</h2>
     <div class="grid3" id="scenes"></div>
+    <h2>Strobe</h2>
+    <div id="strobeRow">
+      <div class="astat" style="margin:0 0 6px">Ritme op de beat (geldt in elke scène). Auto: de scène bepaalt zelf wanneer hij flitst.</div>
+      <div class="grid3" id="strobeDivs"></div>
+      <button id="rollBtn" style="width:100%;margin-top:6px">🥁 Roffel (vasthouden: versnelt op de maat)</button>
+      <button id="flashBtn" class="flashbtn">⚡ FLITS<br><span>tik = één flits · ingedrukt houden = blijven flitsen · of spatiebalk</span></button>
+    </div>
+    <div class="toggles" style="margin-top:6px"><button id="dropBtn">💥 Drop! <span style="opacity:.7;font-size:12px">(opbouw → stilte → knal)</span></button></div>
+
+    <h2>Live bediening</h2>
+    <div class="grid3">
+      <button id="boBtn">⬛ Blackout</button>
+      <button id="frBtn">❄️ Freeze</button>
+      <button id="tapBtn">👆 Tap tempo</button>
+      <button id="skBtn">🚫 Strobe uit</button>
+      <button id="showBtn">🎬 Showmodus</button>
+      <button id="midiBtn">🎛️ APC40 koppelen</button>
+    </div>
+    <p class="astat" id="midimon" style="color:var(--accent)"></p>
+    <p class="astat" id="midistat">Sneltoetsen: 1–8 scènes · B blackout · F freeze · D drop · T tap tempo · S strobe uit · spatie flits · Esc showmodus uit.</p>
+    <div class="astat" style="margin:8px 0 4px">Lampen los aan/uit (op de APC40: de Clip Stop-knoppen 1–8):</div>
+    <div class="mutes" id="mutes"></div>
+    <div class="row"><label for="dScan">Scanners</label><input id="dScan" type="range" min="0" max="100" value="100"><output id="dScanV">100%</output></div>
+    <div class="row"><label for="dAmb">Sfeerlicht</label><input id="dAmb" type="range" min="0" max="100" value="100"><output id="dAmbV">100%</output></div>
+    <div class="row"><label for="dStr">Strobe</label><input id="dStr" type="range" min="0" max="100" value="100"><output id="dStrV">100%</output></div>
+    <div class="row"><label for="spd">Snelheid scanners</label><input id="spd" type="range" min="25" max="200" value="100"><output id="spdV">100%</output></div>
+
+    <h2>Scanners op de maat</h2>
+    <div class="grid3" id="scanMults"></div>
+    <p class="astat">Hoe snel de scanners bewegen ten opzichte van de beat: ½× is één beweging per 2 tellen, 2× twee per tel. Alle patronen lopen strak op de tel.</p>
+
+    <h2>Rook</h2>
+    <div class="grid3" id="smokeDivs"></div>
+    <button id="smokeHoldBtn" style="width:100%;margin-top:6px">💨 Rook (vasthouden = rook zolang je drukt)</button>
+    <div class="row"><label for="sPow">Kracht (zacht ↔ hard)</label><input id="sPow" type="range" min="10" max="100" value="60"><output id="sPowV">60%</output></div>
+    <p class="astat">Auto: de scène bepaalt het (o.a. bij drops). Bij een eigen ritme geeft de machine op die tel 1 tel rook.</p>
+
+    <h2>Kleurthema</h2>
+    <div class="grid3" id="themes"></div>
 
     <h2>Scannerpatroon</h2>
     <div class="grid3" id="pats"></div>
     <p class="astat" id="patstat"></p>
+
+    <h2>Veiligheid</h2>
+    <div class="toggles">
+      <button id="eyeBtn" class="on">👁️ Oogveilig</button>
+      <button id="strBtn" class="on">⚡ Strobe beperkt</button>
+      <button id="smkBtn" class="on">💨 Rook zuinig</button>
+    </div>
+    <p class="astat">Oogveilig: bundels op de muren blijven boven 1,95 m. Strobe beperkt: max. 3 flitsen per seconde en 8 per 10 seconden. Rook zuinig: automatische stoten max. 2 s, minstens 40 s ertussen.</p>
+
+    <h2>Avondprogramma</h2>
+    <div id="prog"></div>
+    <div class="toggles" style="margin-top:6px">
+      <button id="progStart">▶ Start programma</button>
+      <button id="progDemo">⏩ Snel bekijken</button>
+    </div>
+    <p class="astat" id="progstat">Stel de onderdelen van je avond in en druk op Start. De lichtshow wisselt dan vanzelf van scène. "Snel bekijken" speelt de hele avond af in seconden in plaats van minuten.</p>
 
     <h2>Tempo &amp; licht</h2>
     <div class="row"><label for="bpm">BPM</label><input id="bpm" type="range" min="60" max="170" value="124"><output id="bpmV">124</output></div>
@@ -1276,18 +1352,18 @@
 
   // ---------- Toestellen ----------
   const DEFS = {
-    A:  {name:'A — Winner II scanner', type:'scanner', x:1.5,  y:-2.9, h:1.6},
-    B:  {name:'B — Winner II scanner', type:'scanner', x:2.1,  y:-2.9, h:1.6},
-    C:  {name:'C — Winner II scanner', type:'scanner', x:5.8,  y:-2.9, h:1.6},
-    D:  {name:'D — Winner II scanner', type:'scanner', x:6.5,  y:-2.9, h:1.6},
-    e:  {name:'e — SP-1500 stroboscoop', type:'strobe', x:4.15, y:-2.9, h:1.6},
+    A:  {name:'A — Winner II scanner', type:'scanner', x:1.5,  y:-2.9, h:2.6},
+    B:  {name:'B — Winner II scanner', type:'scanner', x:2.1,  y:-2.9, h:2.6},
+    C:  {name:'C — Winner II scanner', type:'scanner', x:5.8,  y:-2.9, h:2.6},
+    D:  {name:'D — Winner II scanner', type:'scanner', x:6.5,  y:-2.9, h:2.6},
+    e:  {name:'e — SP-1500 stroboscoop', type:'strobe', x:4.15, y:-2.9, h:2.6},
     F:  {name:'F — rookmachine', type:'smoke', x:6.95, y:0.55, h:0.15},
     g:  {name:'g — sfeerlicht plafond', type:'amb', x:7.55, y:9.0, h:0.9},
     f:  {name:'f — sfeerlicht plafond (bij de gang)', type:'amb', x:0.4, y:0.4, h:0.9},
     H1: {name:'H — speaker boven', type:'speaker', x:7.65, y:9.6, h:0.5},
     H2: {name:'H — speaker onder', type:'speaker', x:7.55, y:0.6, h:0.5}
   };
-  const STORE = 'madeira-huiskamer-v4';
+  const STORE = 'madeira-huiskamer-v5';
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch(e){ saved = null; }
   const FX = {};
@@ -1373,7 +1449,7 @@
     return new THREE.CanvasTexture(cv);
   }
   const DOT_TEX = dotTexture();
-  const dotPos = [], dotSeed = [];
+  const dotPos = [], dotSeed = [], dotOwner = [];
   [['g', 85], ['f', 75]].forEach(([key, count]) => {      // sfeerlichtjes rond unit g en unit f
     const c = FX[key].def; let tries = 0, made = 0;
     while (made < count && tries < 5000){
@@ -1381,7 +1457,7 @@
       const a = Math.random() * Math.PI * 2, r = 0.3 + Math.sqrt(Math.random()) * 4.0;
       const x = c.x + Math.cos(a) * r, y = c.y + Math.sin(a) * r;
       if (!inFloor(x, y) || !inFloor(x - .2, y) || !inFloor(x, y + .2) || !inFloor(x + .2, y) || !inFloor(x, y - .2)) continue;
-      const v = W(x, y, H - 0.01); dotPos.push(v.x, v.y, v.z); dotSeed.push(Math.random()); made++;
+      const v = W(x, y, H - 0.01); dotPos.push(v.x, v.y, v.z); dotSeed.push(Math.random()); dotOwner.push(key); made++;
     }
   });
   const dotGeo = new THREE.BufferGeometry();
@@ -1394,7 +1470,8 @@
   const ambLight2 = new THREE.PointLight(0xffaa66, 0, 9, 1.4); scene.add(ambLight2);
 
   // Rook (F) — losse wolkjes die groeien, oplichten in de bundels en vervagen
-  const N_SMOKE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ? 110 : 220;   // lichter op telefoon
+  let smokePower = 0.6;   // rookkracht: 0,1 = zacht pufje, 1 = hard blazen
+  const N_SMOKE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ? 160 : 300;   // lichter op telefoon
   const smoke = [];
   let spawnAcc = 0, burstLeft = 3, cycleT = 0;
   const smokeTint = new THREE.Color(0, 0, 0);
@@ -1416,7 +1493,10 @@
       const f = FX[k], p = f.pos, v = W(p.x, p.y, p.h);
       f.body.position.copy(v);
       const st = f.body.userData.stand;
-      if (st){ st.scale.y = Math.max(0.01, p.h - 0.09); st.position.y = -(p.h - 0.09) / 2 - 0.09; st.visible = p.h > 0.2; }
+      if (st){
+        if (p.h > 2.2){ const L = Math.max(0.01, H - p.h - 0.09); st.scale.y = L; st.position.y = 0.09 + L / 2; st.visible = L > 0.02; }   // aan het plafond
+        else { st.scale.y = Math.max(0.01, p.h - 0.09); st.position.y = -(p.h - 0.09) / 2 - 0.09; st.visible = p.h > 0.2; }       // op een statief
+      }
       f.tag.position.set(v.x, p.h + (f.type === 'speaker' ? 0.75 : 0.42), v.z);
     }
     const s = FX[sel].pos, m = W(s.x, s.y, 0.01); marker.position.copy(m);
@@ -1486,11 +1566,94 @@
   const $ = id => document.getElementById(id);
 
   // ---------- Show ----------
-  const PAL = [0xff2a2a, 0x2a5cff, 0x22ff66, 0xff2ad4, 0x22e0ff, 0xffa31a, 0xffffff, 0x8a2aff].map(c => new THREE.Color(c));
+  const toCols = a => a.map(c => new THREE.Color(c));
+  const THEMES = {
+    regenboog:     {name:'🌈 Regenboog',     pal:[0xff2a2a,0x2a5cff,0x22ff66,0xff2ad4,0x22e0ff,0xffa31a,0xffffff,0x8a2aff], calm:[0x2a5cff,0x8a2aff,0x22e0ff,0xffa31a]},
+    zonsondergang: {name:'🌅 Zonsondergang', pal:[0xff7a2a,0xff2a6a,0xc02aff,0xffb347,0xff4d94,0xff5a1f],          calm:[0xffa040,0xff6f91,0xa66bff,0xff8a4a]},
+    oceaan:        {name:'🌊 Oceaan',        pal:[0x2a5cff,0x22e0ff,0xffffff,0x1fb6ff,0x6a8cff,0x00ffd0],          calm:[0x2a5cff,0x22a0d0,0x6fd3ff,0x3a6bd9]},
+    tropisch:      {name:'🌴 Tropisch',      pal:[0x22ff66,0xffe02a,0xff2ad4,0x22e0ff,0xff8a1a,0x9cff2a],          calm:[0x2ad18a,0xffc84a,0xd94ac9,0x3ac6d9]},
+    warmwit:       {name:'🕯️ Warm wit',      pal:[0xffd9a0,0xffc070,0xfff0d8,0xffb050,0xffe6c0],                   calm:[0xffc58a,0xffb070,0xffe0b0,0xffa860]}
+  };
+  let theme = 'regenboog';
+  let PAL = toCols(THEMES.regenboog.pal);
+  const WHITE = new THREE.Color(0xffffff);
+  function themeBlend(c, arr, x){ const n = arr.length, v = ((x % 1) + 1) % 1 * n, i = Math.floor(v); return c.copy(arr[i % n]).lerp(arr[(i + 1) % n], v - i); }
   const WARM = [0xffa040, 0xff7a2a, 0xffc870, 0xff9050].map(c => new THREE.Color(c));
   const SCENES = [['blackout','Blackout'],['rustig','😌 Rustig'],['sfeer','Sfeer'],['party','Party'],['volgas','🔥 Vol gas'],['chase','Chase'],['strobe','Strobe'],['wit','Wit / test']];
   const SPOTS = [[2,3],[6,2.5],[4.5,6],[2.8,8.5],[6.8,8],[5,1.2],[1.5,5],[7,5],[4,9]];
   let current = 'party', bpm = 124, sel = 'A', smokeOn = true, ambOn = true, onWalls = true;
+  // veiligheid
+  let strobeDiv = -1;
+  // live bediening
+  // draaiknoppen APC40 (bovenste rij)
+  let knobHue = -1, beamAngle = 0.045, hazeFloor = 0, ambHue = -1, flashRate = 3, amp = 1, transDur = 1.6;
+  const HUECOL = new THREE.Color(), AMP_C = new THREE.Vector3();
+  // lampen los aan/uit (Clip Stop-knoppen 1–8 op de APC40, of de knoppen op het scherm)
+  const muted = {A:false, B:false, C:false, D:false, e:false, f:false, g:false};
+  const MUTE_KEYS = ['A','B','C','D','e','f','g','rook'];
+  // op de maat: scanner-tempo (½×, 1×, 2× van de beat), rookritme, strobe-roffel
+  let scanMult = 1, syncT = 0, lastBeatVal = null, smokeDiv = -1, smokeHold = false, rollHold = false, rollStart = 0;
+  // per scanner (kolommen 3–6 op de APC40): eigen patroon, eigen helderheid, eigen kleur, solo, test-fel
+  const SCAN_KEYS = ['A','B','C','D'];
+  const scanOverride = {A:null, B:null, C:null, D:null}, scanDim = {A:1, B:1, C:1, D:1}, scanHue = {A:-1, B:-1, C:-1, D:-1}, scanTest = {A:false, B:false, C:false, D:false};
+  const scanHueCol = {A:new THREE.Color(), B:new THREE.Color(), C:new THREE.Color(), D:new THREE.Color()};
+  let soloK = null, fullOn = false;
+  let roomOnRef = () => false;
+  let boOn = false, freeze = false, strobeKill = false, dimScan = 1, dimAmb = 1, dimStr = 1, speedMul = 1, taps = [];
+  let manualHold = false, lastManual = -9, manualUntil = -9;
+  function fireManual(t){
+    if (strobeSafe && t - lastManual < 0.34) return;   // ook handmatig max. 3 flitsen per seconde als 'Strobe beperkt' aan staat
+    lastManual = t; manualUntil = t + 0.07;
+  }
+  let eyeSafe = true, strobeSafe = true, smokeSaver = true, nowT = 0, lastAutoSmoke = -999;
+  // oogveilig: bundels op de muren blijven boven hoofdhoogte (1,95–2,65 m)
+  function safeH(h){ h = Math.min(2.6, Math.max(0.3, h)); return eyeSafe ? 1.95 + (h - 0.3) / 2.3 * 0.7 : h; }
+  // strobe beperkt: hooguit 3 flitsen per seconde en 8 per 10 seconden (in de Strobe-scène 30)
+  let strobeOn = false, strobeStart = -9, strobeTimes = [];
+  function limitStrobe(want, t){
+    if (!strobeSafe) return want;
+    if (!want){ strobeOn = false; return false; }
+    if (strobeOn) return t - strobeStart < 0.06;
+    strobeTimes = strobeTimes.filter(x => t - x < 10);
+    const maxPer10 = current === 'strobe' ? 30 : 8;
+    strobeOn = true;
+    if (t - strobeStart >= 0.34 && strobeTimes.length < maxPer10){ strobeStart = t; strobeTimes.push(t); return true; }
+    strobeStart = -9; return false;
+  }
+  // rook zuinig: automatische stoten hooguit 2 s en minstens 40 s ertussen (knop 'Rookstoot!' werkt altijd)
+  function autoSmoke(sec){
+    if (smokeDiv !== -1 || !smokeOn) return;          // alleen in Auto; bij een eigen ritme of 'alleen handmatig' niet
+    if (smokeSaver){ if (nowT - lastAutoSmoke < 40) return; sec = Math.min(sec, 2); }
+    lastAutoSmoke = nowT; burstLeft = Math.max(burstLeft, sec);
+  }
+  // opbouw → stilte → drop
+  let dropPhase = 'none', phaseStart = 0, manualDrop = false, eHist = [], lastHistBeat = -1, gapT = 0, beatNow = 0;
+  const DROP_SCENES = ['party','volgas','chase'];
+  function startDrop(beat){ dropPhase = 'drop'; phaseStart = beat; lastDropBeat = Math.floor(beat); autoSmoke(2.5); }
+  function buildProg(){ return dropPhase === 'build' ? Math.min(1, (beatNow - phaseStart) / 8) : 0; }
+  function dropTick(dt, bi, beat){
+    const allowed = DROP_SCENES.includes(current);
+    if (bi !== lastHistBeat){ lastHistBeat = bi; eHist.push(eS); if (eHist.length > 16) eHist.shift(); }
+    if (!allowed){ dropPhase = 'none'; manualDrop = false; return; }
+    const n = beat - phaseStart;
+    if (manualDrop){
+      if (dropPhase === 'build' && n >= 8){ dropPhase = 'gap'; phaseStart = beat; }
+      else if (dropPhase === 'gap' && n >= 1) startDrop(beat);
+      else if (dropPhase === 'drop' && n >= 8){ dropPhase = 'none'; manualDrop = false; }
+      return;
+    }
+    if (dropPhase === 'drop'){ if (n >= 8) dropPhase = 'none'; return; }
+    if (!A.on) return;
+    const avg = (a, b) => { const x = eHist.slice(a, b); return x.length ? x.reduce((p, q) => p + q, 0) / x.length : 0; };
+    if (dropPhase === 'none'){
+      if (eHist.length >= 12 && avg(-4) - avg(-12, -8) > 0.12 && avg(-4) < 0.8 && bi - lastDropBeat > 32){ dropPhase = 'build'; phaseStart = beat; }
+    } else if (dropPhase === 'build'){
+      if (A.bass < 0.18 && eS > 0.3){ gapT += dt; if (gapT > 0.12){ dropPhase = 'gap'; phaseStart = beat; gapT = 0; } } else gapT = 0;
+      if (n > 24) dropPhase = 'none';
+    } else if (dropPhase === 'gap'){
+      if (A.bass > 0.55) startDrop(beat); else if (n > 4) dropPhase = 'none';
+    }
+  }
 
   function mainPlan(x, y){
     y = Math.min(9.5, Math.max(0.6, y));
@@ -1509,7 +1672,7 @@
   function blocked(from, to){ return segs.some(([a, b]) => segHit(from, to, a, b)); }
   const SLANT_A = [-4.14, 3.87], SLANT_B = [1, 10], SL_N = [0.766, -0.643];   // schuine wand + normaal de kamer in
   function wallTarget(k, from, u, h){
-    u = Math.min(0.95, Math.max(0.05, u)); h = Math.min(2.6, Math.max(0.3, h));
+    u = Math.min(0.95, Math.max(0.05, u)); h = safeH(h);
     if (k === 'A' || k === 'B'){
       let y = 1.2 + u * (9.6 - 1.2), n = 0;
       while (blocked(from, [7.9, y]) && n < 40){ y = Math.min(9.6, y + 0.2); n++; }
@@ -1557,6 +1720,7 @@
   const VOL_LIST = ['synchroon','pingpong','flits','samenDiag','explosie','tunnel','regen','pendel','samenLR','spiraal'];
   let lastVolSmoke = -1;
   function scenePattern(bi, t){
+    if (dropPhase === 'drop' && DROP_SCENES.includes(current)) return 'explosie';
     const auto = patSel === 'slim' || patSel === 'auto';
     if (current === 'rustig') return auto ? RUSTIG_LIST[Math.floor(bi / 16) % RUSTIG_LIST.length] : patSel;
     if (current === 'volgas') return auto ? VOL_LIST[Math.floor(bi / 8) % VOL_LIST.length] : patSel;
@@ -1572,7 +1736,7 @@
     hard:   {name:'Hard',   set:['regen','flits','explosie','pingpong']},
     drop:   {name:'DROP!',  set:['explosie']}
   };
-  const CALM = [0x2a5cff, 0x8a2aff, 0x22e0ff, 0xffa31a].map(c => new THREE.Color(c));
+  let CALM = toCols(THEMES.regenboog.calm);
   let smartMood = 'groove', smartPat = 'kruis', smartIdx = 0, lastPick = -99, moodCand = '', moodCount = 0, lastBi = -1;
   let eS = 0, eL = 0, lastDropBeat = -999, dropUntil = -1;
   function classify(bpmNow){
@@ -1590,8 +1754,8 @@
     const bpmNow = (A.on && A.intervals.length >= 3) ? 60 / A.period : bpm;
     // drop: na een rustig stuk ineens veel energie
     if (A.on && eS > 0.6 && eL < 0.42 && eS > eL * 1.5 && bi - lastDropBeat > 32){
-      lastDropBeat = bi; dropUntil = bi + 8; smartMood = 'drop'; smartPat = 'explosie'; lastPick = bi;
-      burstLeft = Math.max(burstLeft, 2.5);
+      dropUntil = bi + 8; smartMood = 'drop'; smartPat = 'explosie'; lastPick = bi;
+      if (DROP_SCENES.includes(current) && dropPhase !== 'drop') startDrop(bi); else lastDropBeat = bi;
       return;
     }
     if (bi < dropUntil) return;
@@ -1613,7 +1777,7 @@
     if (r.bw){   // achterwand (7 m)
       let x = Math.min(7.7, Math.max(1.3, r.x)), n = 0;
       while (blocked(from, [x, 9.9]) && n < 30){ x += 0.2; n++; }
-      return W(x, 9.96, Math.min(2.6, Math.max(0.3, r.h)));
+      return W(x, 9.96, safeH(r.h));
     }
     if (r.w) return wallTarget(k, from, r.u, r.h);
     let [x, y] = mainPlan(r.x, r.y), n = 0;
@@ -1635,24 +1799,30 @@
       beat = A.clock; f = (60 / A.period) / 120;
     } else { beat = t * bpm / 60; f = bpm / 120; }
     const bi = Math.floor(beat), ph = beat - bi;
+    nowT = t; beatNow = beat;
+    // beat-teller voor de scanners: loopt mee met de beat × gekozen tempo (½×, 1×, 2×) × snelheid-fader
+    if (lastBeatVal !== null){ const dB = Math.min(1, Math.max(0, beat - lastBeatVal)); syncT += dB * scanMult * speedMul * (1 + buildProg()); }
+    lastBeatVal = beat;
     smartUpdate(bi, dt);
+    dropTick(dt, bi, beat);
+    progTick(t);
     patStatus(bi, t);
-    mt += dt * f * (A.on ? (0.6 + 1.2 * A.energy) : 1);
+    mt += dt * f * (A.on ? (0.6 + 1.2 * A.energy) : 1) * (1 + 1.6 * buildProg()) * speedMul;
     const pulse = A.on ? Math.max(0.15, A.bass) : 1 - ph * 0.4;
 
     // overgangen: bij een nieuwe scène of een nieuw patroon glijden de bundels rustig naar hun nieuwe baan
-    const patKey = current + '|' + scenePattern(bi, t);
+    const patKey = current + '|' + scenePattern(bi, t) + '|' + SCAN_KEYS.map(k => scanOverride[k] || '').join(',');
     if (patKey !== lastPatKey){ lastPatKey = patKey; transT = t; }
-    const prog = Math.min(1, (t - transT) / 1.6), pe = ease(prog);
+    const prog = Math.min(1, (t - transT) / transDur), pe = ease(prog);
     const moveRate = 2.2 + (14 - 2.2) * pe;          // motorsnelheid van de spiegel: traag tijdens een overgang, daarna vlot
     const colRate  = prog < 1 ? 2.5 : 7;
     SCANNERS.forEach((k, i) => {
       const p = FX[k].pos;
       from.copy(W(p.x, p.y + 0.27, p.h));
-      let kk = 0, col = PAL[6], to;
+      let kk = 0, col = WHITE, to;
       const side = i < 2 ? -1 : 1;
       if (current === 'sfeer'){
-        kk = (i === 1 || i === 2) ? (A.on ? 0.25 + 0.35 * A.mid : 0.4) : 0; col = WARM[i];
+        kk = (i === 1 || i === 2) ? (A.on ? 0.25 + 0.35 * A.mid : 0.4) : 0; col = theme === 'regenboog' ? WARM[i] : CALM[i % CALM.length];
         to = mainTarget(4.3 + side * (1.6 + Math.sin(t * .2 + i) * 1.4), 5 + Math.sin(t * .15 + i * 2) * 3.5);
       } else if (current === 'party'){
         kk = pulse; col = PAL[(bi + i * 2) % PAL.length];
@@ -1672,9 +1842,9 @@
       if (NO_WALL_HIT[k]) to = freeTarget([p.x, p.y + 0.27], [to.x + CX, CY - to.z]);
       // Patronen: A/B werken op de rechterwand, C/D op de schuine wand, of alle vier samen op vloer/plafond
       if (['party','sfeer','chase','rustig','volgas'].includes(current)){
-        const T = current === 'party' ? mt : current === 'volgas' ? mt * 1.6 : current === 'sfeer' ? mt * 0.3 : current === 'rustig' ? mt * 0.4 : bi * 0.55 + i * 0.13;
-        const pat = scenePattern(bi, t);
-        const bT = (current === 'sfeer' || current === 'rustig') ? beat * 0.5 : beat;
+        const T = current === 'party' ? syncT * 0.5 : current === 'volgas' ? syncT * 0.8 : current === 'sfeer' ? mt * 0.3 : current === 'rustig' ? mt * 0.4 : Math.floor(syncT) * 0.55 + i * 0.13;
+        const pat = scanOverride[k] && !(dropPhase === 'drop' && DROP_SCENES.includes(current)) ? scanOverride[k] : scenePattern(bi, t);
+        const bT = (current === 'sfeer' || current === 'rustig') ? beat * 0.5 : syncT;
         to = patternTarget(pat, k, i, T, [p.x, p.y + 0.27], bT);
         const PT = PATTERNS[pat];
         if (current === 'party'){
@@ -1689,27 +1859,35 @@
         }
         // zachte scènes ademen mee op elke tel
         if (current === 'rustig' || current === 'sfeer') kk *= 0.72 + 0.28 * Math.pow(1 - ph, 2);
+        if (DROP_SCENES.includes(current)){
+          if (dropPhase === 'build') kk *= 0.45 + 0.55 * buildProg();                  // spanning: steeds feller
+          else if (dropPhase === 'gap') kk = 0;                                        // even zwart
+          else if (dropPhase === 'drop'){ kk = 1; if (beat - phaseStart < 1) col = WHITE; }
+        }
       } else if (current === 'wit'){
         to = wallTarget(k, [p.x, p.y + 0.27], i % 2 ? 0.62 : 0.38, 1.6);
       }
+      if (knobHue >= 0) col = HUECOL.setHSL(knobHue, 1, 0.55);                        // kleur alle scanners
+      if (scanHue[k] >= 0) col = scanHueCol[k].setHSL(scanHue[k], 1, 0.55);               // eigen kleur van deze scanner
+      if (scanTest[k] || fullOn){ col = WHITE; kk = 1; }
+      if (amp !== 1){ AMP_C.copy(W(4.2, 4.6, 1.8)); to = AMP_C.clone().lerp(to, amp); }   // knop 6: grootte van de beweging
       const sm = FX[k].sm || (FX[k].sm = {dir:null, col:col.clone(), k:0});
       tmpDir.copy(to).sub(from).normalize();
       if (!sm.dir) sm.dir = tmpDir.clone();
-      sm.dir.lerp(tmpDir, 1 - Math.exp(-moveRate * dt)).normalize();
-      sm.col.lerp(col, 1 - Math.exp(-colRate * dt));
-      const kTarget = kk * master;
+      if (!freeze){ sm.dir.lerp(tmpDir, 1 - Math.exp(-moveRate * dt)).normalize(); sm.col.lerp(col, 1 - Math.exp(-colRate * dt)); }
+      const kTarget = (scanTest[k] || fullOn) ? 1 : (boOn || muted[k] || (soloK && soloK !== k)) ? 0 : kk * master * dimScan * scanDim[k];
       sm.k += (kTarget - sm.k) * (1 - Math.exp(-(kTarget > sm.k ? 16 : 6) * dt));   // snel aan, zacht uit
-      aim(FX[k].beam, from, rayEnd(from, sm.dir), 0.045, sm.col, sm.k);
+      aim(FX[k].beam, from, rayEnd(from, sm.dir), beamAngle, sm.col, sm.k);
     });
 
     // Strobe
     const sp = FX.e.pos;
     strobeLight.position.copy(W(sp.x, sp.y + 0.4, sp.h));
     let flash = false;
-    if (current === 'strobe') flash = ((beat * 2) % 1) < 0.12;
+    if (current === 'strobe') flash = (bi % 1 === 0) && ph < 0.12;   // Strobe-scène: standaard elke beat
     else if (current === 'volgas'){
       flash = ((bi % 4 === 3) && ((beat * 4) % 1) < 0.3) || (A.on && A.peak > 0.5);
-      if (bi % 16 === 0 && bi !== lastVolSmoke){ lastVolSmoke = bi; burstLeft = Math.max(burstLeft, 2); }
+      if (bi % 16 === 0 && bi !== lastVolSmoke){ lastVolSmoke = bi; autoSmoke(2); }
     }
     else if (current === 'party'){
       if (patSel === 'slim' && smartMood === 'rustig') flash = false;
@@ -1717,35 +1895,63 @@
       else if (patSel === 'slim' && smartMood === 'hard') flash = A.on ? (A.peak > 0.55) : ((bi % 4 === 3) && ((beat * 4) % 1) < 0.25);
       else flash = A.on ? (A.peak > 0.75 && A.high > 0.6) : ((bi % 8 === 7) && ((beat * 4) % 1) < 0.25);
     }
-    strobeLight.intensity = flash ? 7 * master : 0;
-    strobePanel.material.color.setScalar(flash ? 1 : 0.13);
+    if (DROP_SCENES.includes(current)){
+      if (dropPhase === 'gap') flash = false;
+      else if (dropPhase === 'drop' && beat - phaseStart < 1.5) flash = ((beat * 4) % 1) < 0.3;
+      else if (dropPhase === 'build' && buildProg() > 0.75) flash = ((beat * 2) % 1) < 0.15;
+    }
+    // eigen strobe-ritme (geldt in elke scène): Auto = de scène bepaalt
+    if (strobeDiv === 0) flash = false;
+    else if (strobeDiv === 0.5) flash = ((beat * 2) % 1) < 0.2;                       // elke halve tel
+    else if (strobeDiv > 0) flash = (bi % strobeDiv === 0) && ph < 0.12;
+    if (rollHold){                                                                    // roffel: versnelt in 4 tellen van 1 naar 4 flitsen per tel
+      const rp = Math.min(1, (beat - rollStart) / 4), sub = rp < 0.25 ? 1 : rp < 0.5 ? 2 : 4;
+      flash = ((beat * sub) % 1) < 0.25;
+    }
+    flash = limitStrobe(flash, t);
+    // handmatige flits (knop of spatiebalk)
+    if (manualHold && t - lastManual >= Math.max(strobeSafe ? 0.34 : 0.05, 1 / flashRate)) fireManual(t);
+    if (t < manualUntil) flash = true;
+    if (strobeKill || boOn || muted.e || fullOn) flash = false;
+    $('flashBtn').classList.toggle('hit', flash); qFlash.classList.toggle('hit', flash);
+    strobeLight.intensity = flash ? 7 * master * dimStr : 0;
+    strobePanel.material.color.setScalar(flash ? 0.13 + 0.87 * dimStr : 0.13);
+    if (flash !== lastFlashLed){ lastFlashLed = flash; ledDirty = true; }
 
     // Sfeerplafond
-    const ambK = (ambOn && current !== 'blackout' && current !== 'strobe') ? master : 0;
+    const ambK = (ambOn && !boOn && current !== 'blackout' && current !== 'strobe') ? master * dimAmb * (dropPhase === 'gap' ? 0.1 : 1) : 0;
     const gp = FX.g.pos;
     for (let i = 0; i < dotSeed.length; i++){
       const s = dotSeed[i];
       const tw = 0.55 + 0.45 * Math.sin(t * (0.8 + s * 1.7) + s * 40);
-      if (current === 'party' || current === 'chase' || current === 'volgas') tmpC.setHSL((t * 0.05 + s * 0.6 + bi * 0.02) % 1, 0.9, 0.55);
+      if (current === 'party' || current === 'chase' || current === 'volgas') themeBlend(tmpC, PAL, t * 0.05 + s * 0.6 + bi * 0.02);
       else if (current === 'wit') tmpC.setRGB(1, 1, 1);
-      else tmpC.setHSL(0.07 + s * 0.05, 0.85, 0.6);
+      else if (theme === 'regenboog') tmpC.setHSL(0.07 + s * 0.05, 0.85, 0.6);
+      else themeBlend(tmpC, CALM, t * 0.02 + s * 0.5);
       const bp = (current === 'party' || current === 'volgas' || current === 'chase') ? 0.55 + 0.45 * Math.pow(1 - ph, 2) : 0.78 + 0.22 * Math.pow(1 - ph, 2);
-      const k = tw * ambK * bp * (A.on ? 0.45 + 0.55 * A.mid : 1);
+      if (ambHue >= 0) tmpC.setHSL((ambHue + s * 0.06) % 1, 0.85, 0.6);              // knop 4: vaste kleur sfeerlicht
+      if (fullOn) tmpC.setRGB(1, 0.95, 0.85);
+      const k = fullOn ? 1 : muted[dotOwner[i]] ? 0 : tw * ambK * bp * (A.on ? 0.45 + 0.55 * A.mid : 1);
       dotCol[i*3] = tmpC.r * k; dotCol[i*3+1] = tmpC.g * k; dotCol[i*3+2] = tmpC.b * k;
     }
     dotGeo.attributes.color.needsUpdate = true;
     ambLight.position.copy(W(gp.x, gp.y, H - 0.4));
-    ambLight.color.copy(current === 'party' || current === 'chase' || current === 'volgas' ? tmpC.setHSL((t * 0.05) % 1, 0.8, 0.55) : WARM[0]);
-    ambLight.intensity = ambK * 0.9;
+    ambLight.color.copy(current === 'party' || current === 'chase' || current === 'volgas' ? themeBlend(tmpC, PAL, t * 0.05) : (theme === 'regenboog' ? WARM[0] : CALM[0]));
+    ambLight.intensity = fullOn ? 1.4 : muted.g ? 0 : ambK * 0.9;
+    hemi.intensity = fullOn ? 0.75 : (roomOnRef() ? 0.6 : 0.07);
     const fq = FX.f.pos;
-    ambLight2.position.copy(W(fq.x, fq.y, H - 0.4)); ambLight2.color.copy(ambLight.color); ambLight2.intensity = ambK * 0.9;
+    ambLight2.position.copy(W(fq.x, fq.y, H - 0.4)); ambLight2.color.copy(ambLight.color); ambLight2.intensity = fullOn ? 1.4 : muted.f ? 0 : ambK * 0.9;
 
     // Rook: machine geeft elke ~12 s een stoot van ~3 s (zoals een echte rookmachine), plus handmatige stoten
     // rookstoot op de maat: elke 32 tellen, 2 tellen lang
-    if (smokeOn && bi % 32 === 0 && bi !== cycleT){ cycleT = bi; burstLeft = Math.max(burstLeft, 2 * 60 / (A.on ? 60 / A.period : bpm)); }
+    const beatSec = 60 / (A.on ? 60 / A.period : bpm);
+    if (smokeOn && smokeDiv === -1 && bi % 32 === 0 && bi !== cycleT){ cycleT = bi; autoSmoke(2 * beatSec); }
+    if (smokeOn && smokeDiv > 0 && bi % smokeDiv === 0 && bi !== cycleT){ cycleT = bi; burstLeft = Math.max(burstLeft, Math.min(2, beatSec)); }   // gekozen ritme: 1 tel rook
+    if (smokeOn && smokeHold) burstLeft = Math.max(burstLeft, 0.15);                  // rookknop ingedrukt houden
     const firing = burstLeft > 0;
     if (firing) burstLeft -= dt;
-    haze = firing ? Math.min(1, haze + dt * 0.08) : Math.max(0, haze - dt * (smokeOn ? 0.012 : 0.035));
+    haze = firing ? Math.min(1, haze + dt * 0.08 * (0.3 + smokePower * 1.2)) : Math.max(0, haze - dt * (smokeOn ? 0.012 : 0.035));
+    haze = Math.max(haze, hazeFloor);                                                // knop 3: vaste hoeveelheid nevel
     smokeLed.material.color.set(firing ? 0xff5a1f : (smokeOn ? 0x2a7a2a : 0x220a00));
 
     // kleur van het licht in de kamer, zodat de rook mee kleurt
@@ -1756,7 +1962,7 @@
 
     const fp = FX.F.pos, origin = W(fp.x, fp.y, fp.h);
     const dirA = Math.atan2(5 - fp.y, 4.3 - fp.x);   // richting het midden van de kamer
-    spawnAcc = Math.min(6, spawnAcc + (firing ? dt * 38 : 0));
+    spawnAcc = Math.min(8, spawnAcc + (firing ? dt * (8 + 62 * smokePower) : 0));   // meer rook bij harder blazen
     for (let i = 0; i < N_SMOKE; i++){
       const s = smoke[i], m = s.sp.material;
       if (s.life <= 0){
@@ -1765,10 +1971,10 @@
           s.max = s.life = 7 + Math.random() * 7;
           s.sp.position.set(origin.x + (Math.random() - .5) * .06, origin.y + 0.08, origin.z + (Math.random() - .5) * .06);
           const a = dirA + (Math.random() - 0.5) * 0.35;
-          const sp0 = 2.2 + Math.random() * 1.6;           // krachtige straal uit de spuitmond
+          const sp0 = (0.7 + 3.6 * smokePower) * (0.8 + Math.random() * 0.4);   // zacht = trage pluim, hard = krachtige straal
           s.vx = Math.cos(a) * sp0; s.vz = -Math.sin(a) * sp0;
           s.vy = 0.15 + Math.random() * 0.25;
-          s.grow = 0.7 + Math.random() * 0.8;
+          s.grow = (0.5 + 0.9 * smokePower) * (0.8 + Math.random() * 0.5);
           s.sp.visible = true;
         } else { s.sp.visible = false; }
         continue;
@@ -1793,7 +1999,7 @@
   const scenesEl = $('scenes');
   SCENES.forEach(([id, name]) => {
     const b = document.createElement('button'); b.textContent = name; b.dataset.id = id;
-    b.onclick = () => { current = id; refresh(); }; scenesEl.appendChild(b);
+    b.onclick = () => { if (progRun) stopProg('Programma gestopt, je koos zelf een scène.'); current = id; refresh(); }; scenesEl.appendChild(b);
   });
   const patsEl = $('pats');
   [['slim','🎧 Slim'], ['auto','Auto']].concat(Object.keys(PATTERNS).map(k => [k, PATTERNS[k].name])).forEach(([id, name]) => {
@@ -1803,8 +2009,13 @@
   function refreshPats(){ patsEl.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.id === patSel)); }
   refreshPats();
   function patStatus(bi, t){
-    const now = scenePattern(bi, t), key = now + '|' + smartMood + '|' + patSel + '|' + current;
+    const now = scenePattern(bi, t), key = now + '|' + smartMood + '|' + patSel + '|' + current + '|' + dropPhase;
     if (key === lastAuto) return; lastAuto = key;
+    if (DROP_SCENES.includes(current) && dropPhase !== 'none'){
+      $('patstat').textContent = dropPhase === 'build' ? '⬆️ Opbouw: de spanning stijgt, de scanners versnellen…'
+        : dropPhase === 'gap' ? '⬛ Stilte voor de drop…' : '💥 DROP! Explosie, strobe en rook.';
+      return;
+    }
     if ((current === 'rustig' || current === 'volgas') && (patSel === 'slim' || patSel === 'auto')){
       $('patstat').textContent = (current === 'rustig' ? 'Rustig: zachte patronen op halve snelheid van de beat, nu ' : 'Vol gas: elke 8 tellen een nieuw krachtig patroon, nu ') + PATTERNS[now].name + '.';
       return;
@@ -1819,7 +2030,426 @@
       ? 'Auto: nu ' + PATTERNS[now].name + '. Wisselt elke 16 tellen naar het volgende patroon.'
       : 'Patroon: ' + PATTERNS[now].name + '. Werkt in alle scènes behalve Blackout, Strobe en Wit.';
   }
-  function refresh(){ scenesEl.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.id === current)); }
+  // kleurthema's
+  const themesEl = $('themes');
+  Object.keys(THEMES).forEach(id => {
+    const b = document.createElement('button'); b.textContent = THEMES[id].name; b.dataset.id = id;
+    b.onclick = () => { theme = id; PAL = toCols(THEMES[id].pal); CALM = toCols(THEMES[id].calm); themesEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.id === theme)); };
+    themesEl.appendChild(b);
+  });
+  themesEl.querySelector('[data-id="regenboog"]').classList.add('on');
+  // veiligheid
+  $('eyeBtn').onclick = e => { eyeSafe = !eyeSafe; e.currentTarget.classList.toggle('on', eyeSafe); };
+  $('strBtn').onclick = e => { strobeSafe = !strobeSafe; e.currentTarget.classList.toggle('on', strobeSafe); };
+  $('smkBtn').onclick = e => { smokeSaver = !smokeSaver; e.currentTarget.classList.toggle('on', smokeSaver); };
+  // handmatige drop
+  $('dropBtn').onclick = () => {
+    if (!DROP_SCENES.includes(current)){ current = 'party'; refresh(); }
+    manualDrop = true; dropPhase = 'build'; phaseStart = beatNow;
+  };
+
+  // ---------- Avondprogramma ----------
+  const PSTORE = 'madeira-programma-v1';
+  const SCENE_NAME = Object.fromEntries(SCENES);
+  let program = [['Ontvangst','sfeer',30],['Diner','rustig',60],['Feest','party',60],['Hoogtepunt','volgas',20],['Afsluiter','rustig',15]];
+  try { const sp = JSON.parse(localStorage.getItem(PSTORE) || 'null'); if (Array.isArray(sp) && sp.length) program = sp; } catch(e){}
+  let progRun = null, wakeLock = null;
+  function saveProg(){ try { localStorage.setItem(PSTORE, JSON.stringify(program)); } catch(e){} }
+  function renderProg(){
+    const el = $('prog'); el.innerHTML = '';
+    program.forEach((st, i) => {
+      const row = document.createElement('div'); row.className = 'prow'; row.dataset.i = i;
+      const nm = document.createElement('input'); nm.value = st[0]; nm.oninput = () => { st[0] = nm.value; saveProg(); };
+      const sc = document.createElement('select');
+      SCENES.filter(([id]) => id !== 'wit').forEach(([id, name]) => { const o = document.createElement('option'); o.value = id; o.textContent = name; if (id === st[1]) o.selected = true; sc.appendChild(o); });
+      sc.onchange = () => { st[1] = sc.value; saveProg(); };
+      const mn = document.createElement('input'); mn.type = 'number'; mn.min = 1; mn.max = 600; mn.value = st[2]; mn.title = 'minuten';
+      mn.oninput = () => { st[2] = Math.max(1, +mn.value || 1); saveProg(); };
+      row.append(nm, sc, mn); el.appendChild(row);
+    });
+  }
+  renderProg();
+  function startProg(speed){
+    progRun = {start: nowT, speed, idx: -1};
+    $('progStart').classList.toggle('on', speed === 1); $('progDemo').classList.toggle('on', speed !== 1);
+    try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wakeLock = l; }).catch(() => {}); } catch(e){}
+  }
+  function stopProg(msg){
+    progRun = null; $('progStart').classList.remove('on'); $('progDemo').classList.remove('on');
+    document.querySelectorAll('.prow').forEach(r => r.classList.remove('now'));
+    try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null;
+    $('progstat').textContent = msg;
+  }
+  $('progStart').onclick = () => progRun ? stopProg('Programma gestopt.') : startProg(1);
+  $('progDemo').onclick = () => progRun ? stopProg('Programma gestopt.') : startProg(60);
+  function progTick(t){
+    if (!progRun) return;
+    const mins = (t - progRun.start) * progRun.speed / 60;
+    let acc = 0, idx = -1;
+    for (let i = 0; i < program.length; i++){ if (mins < acc + program[i][2]){ idx = i; break; } acc += program[i][2]; }
+    if (idx < 0){ current = 'blackout'; refresh(); stopProg('Het avondprogramma is klaar. Welterusten!'); return; }
+    const st = program[idx];
+    if (idx !== progRun.idx){
+      progRun.idx = idx; current = st[1]; refresh();
+      document.querySelectorAll('.prow').forEach(r => r.classList.toggle('now', +r.dataset.i === idx));
+    }
+    const left = Math.ceil(acc + st[2] - mins), next = program[idx + 1];
+    const txt = 'Nu: ' + st[0] + ' (' + SCENE_NAME[st[1]] + '), nog ' + left + (progRun.speed === 1 ? ' min' : ' (snel)') + (next ? ' · daarna ' + next[0] : ' · daarna einde');
+    if ($('progstat').textContent !== txt) $('progstat').textContent = txt;
+  }
+
+  // strobe-ritme
+  const sdEl = $('strobeDivs');
+  [[-1,'Auto (scène)'],[0.5,'Elke ½ beat'],[1,'Elke beat'],[2,'Om de beat'],[4,'Elke 4e beat'],[0,'Alleen handmatig']].forEach(([d, name]) => {
+    const b = document.createElement('button'); b.textContent = name; b.dataset.d = d;
+    b.onclick = () => { strobeDiv = d; sdEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.d === strobeDiv)); };
+    sdEl.appendChild(b);
+  });
+  sdEl.querySelector('[data-d="-1"]').classList.add('on');
+  const fb = $('flashBtn');
+  const down = e => { e.preventDefault(); manualHold = true; fireManual(nowT); };
+  const up = () => { manualHold = false; };
+  fb.addEventListener('pointerdown', down);
+  ['pointerup','pointerleave','pointercancel'].forEach(ev => fb.addEventListener(ev, up));
+  window.addEventListener('keydown', e => { if (e.code === 'Space' && !e.repeat && e.target.tagName !== 'INPUT'){ e.preventDefault(); manualHold = true; fireManual(nowT); } });
+  window.addEventListener('keyup', e => { if (e.code === 'Space') manualHold = false; });
+
+  // ---------- Live bediening ----------
+  const qFlash = document.querySelector('#quick .qflash');
+  let lastFlashLed = false, ledDirty = true;
+  function syncUI(){
+    $('boBtn').classList.toggle('on', boOn); $('frBtn').classList.toggle('on', freeze); $('skBtn').classList.toggle('on', strobeKill);
+    document.querySelectorAll('#quick [data-q]').forEach(b => {
+      const q = b.dataset.q;
+      b.classList.toggle('on', (q === current) || (q === 'bo' && boOn) || (q === 'freeze' && freeze) || (q === 'kill' && strobeKill) || (q === 'drop' && dropPhase !== 'none'));
+    });
+    sdEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.d === strobeDiv));
+    ledDirty = true;
+  }
+  function setScene(id){ if (progRun) stopProg('Programma gestopt, je koos zelf een scène.'); current = id; refresh(); }
+  function setTheme(id){ theme = id; PAL = toCols(THEMES[id].pal); CALM = toCols(THEMES[id].calm); themesEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.id === theme)); ledDirty = true; }
+  function setPattern(id){ patSel = id; lastAuto = ''; refreshPats(); ledDirty = true; }
+  function setStrobeDiv(d){ strobeDiv = d; syncUI(); }
+  function doDrop(){ if (!DROP_SCENES.includes(current)) setScene('party'); manualDrop = true; dropPhase = 'build'; phaseStart = beatNow; ledDirty = true; }
+  function toggleMute(i){
+    const key = MUTE_KEYS[i];
+    if (key === 'rook'){ if (smokeOn) setSmokeDiv(-2); else setSmokeDiv(smokeDiv); return; }
+    else muted[key] = !muted[key];
+    syncMutes();
+  }
+  function syncMutes(){
+    document.querySelectorAll('#mutes button').forEach((b, i) => {
+      const key = MUTE_KEYS[i], on = key === 'rook' ? smokeOn : !muted[key];
+      b.classList.toggle('on', on); b.classList.toggle('off', !on);
+    });
+    ledDirty = true;
+  }
+  MUTE_KEYS.forEach((key, i) => {
+    const b = document.createElement('button'); b.textContent = key === 'rook' ? 'Rook' : key; b.title = key === 'rook' ? 'rookmachine F' : 'lamp ' + key;
+    b.onclick = () => toggleMute(i); $('mutes').appendChild(b);
+  });
+  syncMutes();
+  // scanner-tempo
+  const SCAN_MULTS = [[0.5,'½× (rustig)'],[1,'1× (op de tel)'],[2,'2× (dubbel)']];
+  SCAN_MULTS.forEach(([m, name]) => { const b = document.createElement('button'); b.textContent = name; b.dataset.m = m; b.onclick = () => setScanMult(m); $('scanMults').appendChild(b); });
+  function setScanMult(m){ scanMult = m; document.querySelectorAll('#scanMults button').forEach(b => b.classList.toggle('on', +b.dataset.m === scanMult)); ledDirty = true; }
+  setScanMult(1);
+  // rookritme
+  const SMOKE_DIVS = [[-1,'Auto'],[8,'Elke 8 tellen'],[16,'Elke 16 tellen'],[32,'Elke 32 tellen'],[0,'Alleen handmatig'],[-2,'Rook uit']];
+  SMOKE_DIVS.forEach(([d, name]) => { const b = document.createElement('button'); b.textContent = name; b.dataset.s = d; b.onclick = () => setSmokeDiv(d); $('smokeDivs').appendChild(b); });
+  function setSmokeDiv(d){
+    if (d === -2){ smokeOn = false; }
+    else { smokeOn = true; smokeDiv = d; }
+    $('smoke').classList.toggle('on', smokeOn);
+    document.querySelectorAll('#smokeDivs button').forEach(b => b.classList.toggle('on', smokeOn ? +b.dataset.s === smokeDiv : +b.dataset.s === -2));
+    syncMutes();
+  }
+  setSmokeDiv(-1);
+  const holdBtn = (id, on, off) => { const el = $(id); el.addEventListener('pointerdown', e => { e.preventDefault(); on(); el.classList.add('on'); }); ['pointerup','pointerleave','pointercancel'].forEach(ev => el.addEventListener(ev, () => { off(); el.classList.remove('on'); })); };
+  holdBtn('smokeHoldBtn', () => { smokeHold = true; if (!smokeOn) setSmokeDiv(smokeDiv); }, () => { smokeHold = false; });
+  holdBtn('rollBtn', () => { rollHold = true; rollStart = beatNow; }, () => { rollHold = false; });
+  function toggleBo(){ boOn = !boOn; syncUI(); }
+  function toggleFreeze(){ freeze = !freeze; syncUI(); }
+  function toggleKill(){ strobeKill = !strobeKill; syncUI(); }
+  function tapTempo(){
+    const now = performance.now() / 1000;
+    if (taps.length && now - taps[taps.length - 1] > 2) taps = [];
+    taps.push(now); if (taps.length > 6) taps.shift();
+    if (taps.length >= 2){
+      const iv = (taps[taps.length - 1] - taps[0]) / (taps.length - 1);
+      const newBpm = Math.max(60, Math.min(180, Math.round(60 / iv)));
+      bpm = newBpm; $('bpm').value = bpm; $('bpmV').textContent = bpm;
+      if (A.on){ A.period = 60 / newBpm; A.clock = Math.round(A.clock); A.intervals = []; }
+    }
+    $('tapBtn').classList.add('on'); setTimeout(() => $('tapBtn').classList.remove('on'), 120);
+  }
+  function setShow(on){ document.body.classList.toggle('show', on); $('showBtn').classList.toggle('on', on); setTimeout(resize, 30); }
+  $('boBtn').onclick = toggleBo; $('frBtn').onclick = toggleFreeze; $('skBtn').onclick = toggleKill; $('tapBtn').onclick = tapTempo;
+  $('showBtn').onclick = () => setShow(!document.body.classList.contains('show'));
+  const fader = (id, set) => { $(id).oninput = e => { set(e.target.value / 100); $(id + 'V').textContent = e.target.value + '%'; }; };
+  fader('sPow', v => smokePower = v);
+  fader('dScan', v => dimScan = v); fader('dAmb', v => dimAmb = v); fader('dStr', v => dimStr = v); fader('spd', v => speedMul = v);
+  function setFader(id, pct){ $(id).value = pct; $(id).dispatchEvent(new Event('input')); }
+  // snelbalk in showmodus
+  document.querySelectorAll('#quick [data-q]').forEach(b => {
+    const q = b.dataset.q;
+    if (q === 'flash'){
+      b.addEventListener('pointerdown', e => { e.preventDefault(); manualHold = true; fireManual(nowT); });
+      ['pointerup','pointerleave','pointercancel'].forEach(ev => b.addEventListener(ev, () => { manualHold = false; }));
+      return;
+    }
+    b.onclick = () => {
+      if (q === 'exit') setShow(false); else if (q === 'drop') doDrop(); else if (q === 'kill') toggleKill();
+      else if (q === 'freeze') toggleFreeze(); else if (q === 'bo') toggleBo(); else if (q === 'tap') tapTempo(); else setScene(q);
+    };
+  });
+  // sneltoetsen
+  const KEY_SCENES = ['blackout','rustig','sfeer','party','volgas','chase','strobe','wit'];
+  window.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.metaKey || e.ctrlKey) return;
+    const k = e.key.toLowerCase();
+    if (k >= '1' && k <= '8') setScene(KEY_SCENES[+k - 1]);
+    else if (k === 'b') toggleBo(); else if (k === 'f') toggleFreeze(); else if (k === 'd') doDrop();
+    else if (k === 't') tapTempo(); else if (k === 's') toggleKill(); else if (k === 'escape') setShow(false);
+  });
+
+  // ---------- Akai APC40 mkII (Web MIDI, Chrome op de Mac) — indeling per kolom, als een mengpaneel ----------
+  // Kolom 1 STROBE (pads: FLITS, elke beat, om de beat, elke 4e beat, Auto) · 2 ALLE SCANNERS (stuurt 3–6 aan) · 3–6 SCANNER A, B, C, D · 7 ROOK · 8 SCÈNES
+  // Per kolom: draaiknop boven (CC 48+k), 5 pads (noot rij*8+k, rij 0 = onder), Clip Stop (52), lange knop (51),
+  // cijferknop (50), A|B (66), S (49), ● (48) op MIDI-kanaal k, fader (CC 7 op kanaal k). Masterfader (CC 14) = dimmer.
+  // Rechts: Device Control-knoppen (CC 16–23): bundelbreedte, grootte beweging, overgangstijd, tempo, kleur alle scanners.
+  // Tap Tempo (99) · Stop All Clips (81) = blackout · Scene Launch 82–86: Rustig, Party, Vol gas, Drop, Blackout.
+  const APC_COL = {off:0, grey:1, white:3, red:5, orange:9, yellow:13, green:21, cyan:37, blue:45, purple:49, pink:53};
+  const SCENE_COL = {blackout:'grey', rustig:'blue', sfeer:'orange', party:'pink', volgas:'red', chase:'yellow', strobe:'white', wit:'white'};
+  const THEME_COL = {regenboog:'pink', zonsondergang:'orange', oceaan:'blue', tropisch:'green', warmwit:'yellow'};
+  const THEME_IDS = Object.keys(THEMES);
+  const FAV = ['slim','samenLR','synchroon','kruis','explosie'];               // scannerpatronen op de pads, van boven naar onder (Slim = automatisch op de muziek)
+  const COL8_SCENES = ['sfeer','rustig','party','volgas'];                     // kolom 8 van boven naar onder; 5e pad = alles fel (vasthouden)
+  const STROBE_TOP = [null, 1, 2, 4, -1];                                      // kolom 1 (boven → onder): FLITS, elke beat, om de beat, elke 4e beat, Auto (scène)
+  const SMOKE_TOP = [null, null, 8, 16, -1];                                   // kolom 7: rook vasthouden, stoot 3 s, elke 8, elke 16 tellen, Auto
+  let midiOut = null, midiIn = null, ledSent = {}, sceneLedSent = new Array(5).fill(-1);
+  const padNote = (col, top) => (4 - top) * 8 + col;                           // top = 0 bovenste pad … 4 onderste pad
+  // Actief programma = de pad 'ademt' zachtjes in zijn eigen kleur (pulseren op de maat, '*' = pulseren).
+  // Wit = op dit moment ingedrukt of aan het flitsen.
+  function padColor(col, top){
+    if (col === 0){
+      if (top === 0) return lastFlashLed ? 'white' : 'orange';
+      return STROBE_TOP[top] === strobeDiv ? '*yellow' : 'yellow';
+    }
+    if (col === 1) return (FAV[top] === patSel && !Object.values(scanOverride).some(Boolean)) ? '*green' : 'green';
+    if (col >= 2 && col <= 5){
+      const k = SCAN_KEYS[col - 2], own = scanOverride[k];
+      if (scanTest[k]) return 'white';
+      return own === FAV[top] ? '*cyan' : (!own && FAV[top] === patSel ? '*green' : 'cyan');   // eigen patroon = cyaan pulserend, volgt kolom 2 = groen pulserend
+    }
+    if (col === 6){
+      if (top === 0) return smokeHold ? 'white' : 'purple';
+      if (top === 1) return burstLeft > 0.5 ? 'white' : 'purple';
+      return (smokeOn && SMOKE_TOP[top] === smokeDiv) ? '*purple' : 'purple';
+    }
+    if (top === 4) return fullOn ? 'white' : 'yellow';
+    const id = COL8_SCENES[top]; return id === current ? '*' + SCENE_COL[id] : SCENE_COL[id];
+  }
+  // lampjes van de knoppen onder het raster (aan = 1): [noot, kolom] -> aan?
+  function btnLedOn(note, col){
+    if (note === 52){                                                          // Clip Stop = aan/uit
+      if (col === 0) return !strobeKill;
+      if (col === 1) return SCAN_KEYS.some(k => !muted[k]);
+      if (col >= 2 && col <= 5) return !muted[SCAN_KEYS[col - 2]];
+      if (col === 6) return smokeOn;
+      return !(muted.f && muted.g);
+    }
+    if (note === 51){                                                          // lange knop
+      if (col === 0) return strobeDiv === -1;
+      if (col === 1) return freeze;
+      if (col >= 2 && col <= 5) return scanTest[SCAN_KEYS[col - 2]];
+      if (col === 6) return smokeDiv === -1 && smokeOn;
+      return boOn;
+    }
+    if (note === 50){                                                          // cijferknop
+      if (col === 0) return strobeDiv === 0;
+      if (col === 1) return scanMult !== 1;
+      if (col >= 2 && col <= 5) return soloK === SCAN_KEYS[col - 2];
+      if (col === 6) return smokeDiv === 0;
+      return dropPhase !== 'none';
+    }
+    if (note === 49){                                                          // S
+      if (col === 1) return patSel === 'slim';
+      if (col >= 2 && col <= 5) return !!scanOverride[SCAN_KEYS[col - 2]];
+      return false;
+    }
+    if (note === 66) return false;                                             // A|B (kolom 2: volgend kleurthema)
+    if (note === 48) return col === 1 && dropPhase !== 'none';                 // ● (kolom 2: Drop!)
+    return false;
+  }
+  // knoppen onder het raster: Clip Stop brandt als de lamp meedoet; andere knoppen knipperen als hun functie actief is
+  function btnLed(note, col){ const on = btnLedOn(note, col); return note === 52 ? (on ? 1 : 0) : (on ? 2 : 0); }
+  function sendLed(key, msg){ const sig = msg[0] + ':' + msg[2]; if (ledSent[key] !== sig){ ledSent[key] = sig; try { midiOut.send(msg); } catch(e){} } }
+  // APC40 mkII: MIDI-kanaal bepaalt het effect: 0 = vast, 6–10 = pulseren (1/24 … 1/2 noot). Kanaal 10 = rustig pulseren per halve noot.
+  function padMsg(note, c){
+    const pulse = c[0] === '*', name = pulse ? c.slice(1) : c;
+    return pulse ? [0x90 | 0x0A, note, APC_COL[name]] : [0x90, note, APC_COL[name]];
+  }
+  function updateLeds(){
+    if (!midiOut) return;
+    for (let col = 0; col < 8; col++){
+      for (let top = 0; top < 5; top++){
+        const c = padColor(col, top), note = padNote(col, top);
+        const prev = ledSent['p' + col + top];
+        if (c[0] !== '*' && prev && prev.startsWith(String(0x9A))) try { midiOut.send([0x90, note, 0]); } catch(e){}   // pulseren stoppen
+        sendLed('p' + col + top, padMsg(note, c));
+      }
+      for (const note of [52, 51, 50, 49, 66, 48]) sendLed('b' + note + '_' + col, [0x90 | col, note, btnLed(note, col)]);
+    }
+    const sl = [current === 'rustig', current === 'party', current === 'volgas', dropPhase !== 'none', boOn];
+    sl.forEach((on, i) => sendLed('s' + i, [0x90, 82 + i, on ? 1 : 0]));
+  }
+  setInterval(updateLeds, 60);
+  // MIDI-klok naar de APC40 (24 tikken per tel), zodat het pulseren meeloopt met de beat van de muziek
+  let clockTicks = null;
+  setInterval(() => {
+    if (!midiOut) { clockTicks = null; return; }
+    const target = Math.floor(beatNow * 24);
+    if (clockTicks === null || target < clockTicks - 48 || target > clockTicks + 96){ clockTicks = target; return; }
+    let n = 0;
+    while (clockTicks < target && n < 12){ try { midiOut.send([0xF8]); } catch(e){} clockTicks++; n++; }
+  }, 8);
+  function padDown(n){
+    if (n === 99) return tapTempo();
+    if (n === 81) return toggleBo();
+    if (n >= 82 && n <= 86) return [() => setScene('rustig'), () => setScene('party'), () => setScene('volgas'), doDrop, toggleBo][n - 82]();
+    if (n > 39) return;
+    const col = n % 8, top = 4 - Math.floor(n / 8);
+    if (col === 0){
+      if (top === 0){ manualHold = true; fireManual(nowT); }                          // handmatige flits (vasthouden = blijven flitsen)
+      else setStrobeDiv(strobeDiv === STROBE_TOP[top] ? -1 : STROBE_TOP[top]);       // nogmaals = terug naar Auto
+    } else if (col === 1){
+      clearOverrides(); setPattern(FAV[top]);                                         // alle scanners
+    } else if (col <= 5){
+      const k = SCAN_KEYS[col - 2]; scanOverride[k] = (FAV[top] === 'slim' || scanOverride[k] === FAV[top]) ? null : FAV[top];   // Slim = volgt kolom 2
+    } else if (col === 6){
+      if (top === 0){ smokeHold = true; if (!smokeOn) setSmokeDiv(smokeDiv); }
+      else if (top === 1){ if (!smokeOn) setSmokeDiv(smokeDiv); burstLeft = Math.max(burstLeft, 3); }
+      else setSmokeDiv(smokeDiv === SMOKE_TOP[top] ? -1 : SMOKE_TOP[top]);
+    } else {
+      if (top === 4) fullOn = true; else setScene(COL8_SCENES[top]);
+    }
+  }
+  function padUp(n){
+    if (n > 39) return;
+    const col = n % 8, top = 4 - Math.floor(n / 8);
+    if (col === 0 && top === 0) manualHold = false;
+    if (col === 6 && top === 0) smokeHold = false;
+    if (col === 7 && top === 4) fullOn = false;
+  }
+  function colButton(note, col, down){
+    const k = (col >= 2 && col <= 5) ? SCAN_KEYS[col - 2] : null;
+    if (!down){ if (note === 51 && k) scanTest[k] = false; return; }
+    if (note === 52){
+      if (col === 0) toggleKill();
+      else if (col === 1){ const anyOn = SCAN_KEYS.some(x => !muted[x]); SCAN_KEYS.forEach(x => muted[x] = anyOn); syncMutes(); }
+      else if (k){ muted[k] = !muted[k]; syncMutes(); }
+      else if (col === 6) setSmokeDiv(smokeOn ? -2 : smokeDiv);
+      else { const on = muted.f && muted.g; muted.f = muted.g = !on; syncMutes(); }
+    } else if (note === 51){
+      if (col === 0) setStrobeDiv(-1);
+      else if (col === 1) toggleFreeze();
+      else if (k) scanTest[k] = true;                                            // vasthouden: deze scanner fel wit
+      else if (col === 6) setSmokeDiv(-1);
+      else toggleBo();
+    } else if (note === 50){
+      if (col === 0) setStrobeDiv(strobeDiv === 0 ? -1 : 0);
+      else if (col === 1) setScanMult(scanMult === 1 ? 2 : scanMult === 2 ? 0.5 : 1);   // 1× → 2× → ½× → 1×
+      else if (k) soloK = soloK === k ? null : k;
+      else if (col === 6) setSmokeDiv(smokeDiv === 0 ? -1 : 0);
+      else doDrop();
+    } else if (note === 49){
+      if (col === 1){ clearOverrides(); setPattern('slim'); }
+      else if (k) scanOverride[k] = null;
+    } else if (note === 66 && col === 1) setTheme(THEME_IDS[(THEME_IDS.indexOf(theme) + 1) % THEME_IDS.length]);
+    else if (note === 48 && col === 1) doDrop();
+  }
+  function clearOverrides(){ SCAN_KEYS.forEach(k => scanOverride[k] = null); }
+  // ----- draaiknoppen en faders -----
+  const pct127 = v => Math.round(v / 127 * 100);
+  function ring(cc, v){ if (midiOut) try { midiOut.send([0xB0, cc + 8, 2]); midiOut.send([0xB0, cc, v]); } catch(e){} }
+  const say = t => { $('midimon').textContent = t + (midiSysex ? '' : ' · let op: APC40 staat niet in de juiste modus (geen SysEx-toestemming)'); };
+  const knobState = {};   // cc -> waarde, voor de lichtringen
+  function topKnob(col, v){
+    knobState[48 + col] = v; ring(48 + col, v);
+    if (col === 0){ flashRate = 1 + v / 127 * 11; say('Knop 1 · Flitssnelheid (FLITS vasthouden): ' + flashRate.toFixed(1) + ' per sec' + (strobeSafe && flashRate > 3 ? ' (max 3 zolang Strobe beperkt aan staat)' : '')); }
+    else if (col === 1){ setFader('spd', Math.round(25 + v / 127 * 175)); say('Knop 2 · Snelheid alle scanners: ' + $('spdV').textContent); }
+    else if (col <= 5){ const k = SCAN_KEYS[col - 2]; scanHue[k] = v < 4 ? -1 : (v - 4) / 123; say('Knop ' + (col + 1) + ' · Kleur scanner ' + k + ': ' + (scanHue[k] < 0 ? 'volgt de rest' : 'eigen kleur')); }
+    else if (col === 6){ hazeFloor = v / 127; say('Knop 7 · Nevel: ' + pct127(v) + '%'); }
+    else { ambHue = v < 4 ? -1 : (v - 4) / 123; say('Knop 8 · Kleur sfeerlicht: ' + (ambHue < 0 ? 'automatisch' : 'vaste kleur')); }
+  }
+  function faderMove(col, v){
+    if (col === 0){ setFader('dStr', pct127(v)); say('Fader 1 · Strobe: ' + pct127(v) + '%'); }
+    else if (col === 1){ setFader('dScan', pct127(v)); say('Fader 2 · Alle scanners: ' + pct127(v) + '%'); }
+    else if (col <= 5){ const k = SCAN_KEYS[col - 2]; scanDim[k] = v / 127; say('Fader ' + (col + 1) + ' · Scanner ' + k + ': ' + pct127(v) + '%'); }
+    else if (col === 6){ setFader('sPow', Math.max(10, pct127(v))); say('Fader 7 · Rookkracht: ' + $('sPowV').textContent); }
+    else { setFader('dAmb', pct127(v)); say('Fader 8 · Sfeerlicht: ' + pct127(v) + '%'); }
+  }
+  function deviceKnob(i, v){
+    knobState[16 + i] = v; ring(16 + i, v);
+    if (i === 0){ beamAngle = 0.015 + v / 127 * 0.11; say('Device 1 · Bundelbreedte: ' + pct127(v) + '%'); }
+    else if (i === 1){ amp = 0.15 + v / 127 * 1.0; say('Device 2 · Grootte beweging: ' + Math.round(amp * 100) + '%'); }
+    else if (i === 2){ transDur = 0.3 + v / 127 * 5.7; say('Device 3 · Overgangstijd: ' + transDur.toFixed(1) + ' s'); }
+    else if (i === 3){ bpm = Math.round(60 + v / 127 * 120); $('bpm').value = bpm; $('bpmV').textContent = bpm; say('Device 4 · Tempo: ' + bpm + ' BPM' + (A.on ? ' (microfoon bepaalt nu het tempo)' : '')); }
+    else if (i === 4){ knobHue = v < 4 ? -1 : (v - 4) / 123; say('Device 5 · Kleur alle scanners: ' + (knobHue < 0 ? 'themakleuren' : 'vaste kleur')); }
+  }
+  function initRings(){
+    if (!midiOut) return;
+    const tops = [Math.round((flashRate - 1) / 11 * 127), Math.round((+$('spd').value - 25) / 175 * 127), 0, 0, 0, 0, Math.round(hazeFloor * 127), 0];
+    tops.forEach((v, i) => ring(48 + i, knobState[48 + i] ?? v));
+    const dev = [Math.round((beamAngle - 0.015) / 0.11 * 127), Math.round((amp - 0.15) * 127), Math.round((transDur - 0.3) / 5.7 * 127), Math.round((bpm - 60) / 120 * 127), 0];
+    dev.forEach((v, i) => ring(16 + i, knobState[16 + i] ?? Math.max(0, Math.min(127, v))));
+    for (let i = 5; i < 8; i++) try { midiOut.send([0xB0, 24 + i, 0]); } catch(e){}
+  }
+  let midiCount = 0, midiSysex = false;
+  function onMidi(ev){
+    const [st, d1, d2] = ev.data, type = st & 0xF0, ch = st & 0x0F;
+    midiCount++;
+    const isOn = type === 0x90 && d2 > 0, isOff = type === 0x80 || (type === 0x90 && d2 === 0);
+    if (isOn || isOff){
+      if ([48, 49, 50, 51, 52, 66].includes(d1)) colButton(d1, ch, isOn);
+      else if (isOn) padDown(d1); else padUp(d1);
+      if (isOn) $('midimon').textContent = 'MIDI ontvangen (' + midiCount + '): knop ' + d1 + (d1 >= 48 ? ' kolom ' + (ch + 1) : '');
+    } else if (type === 0xB0){
+      if (d1 === 7 && ch < 8) faderMove(ch, d2);
+      else if (d1 === 14){ setFader('dim', pct127(d2)); say('Masterfader · Dimmer: ' + pct127(d2) + '%'); }
+      else if (d1 >= 48 && d1 <= 55) topKnob(d1 - 48, d2);
+      else if (d1 >= 16 && d1 <= 23) deviceKnob(d1 - 16, d2);
+    }
+  }
+  $('midiBtn').onclick = async () => {
+    const ms = $('midistat');
+    if (!navigator.requestMIDIAccess){ ms.textContent = 'Deze browser kan geen MIDI-apparaten lezen. Gebruik Chrome op je Mac; op de iPhone kan dit niet.'; return; }
+    let access = null;
+    try { access = await navigator.requestMIDIAccess({sysex:true}); midiSysex = true; } catch(e){ try { access = await navigator.requestMIDIAccess(); } catch(e2){} }
+    if (!access){ ms.textContent = 'Geen toegang tot MIDI. Sta MIDI toe voor deze pagina (slotje links in de adresbalk) en probeer opnieuw.'; return; }
+    const find = list => { for (const p of list.values()) if (/apc\s*40/i.test(p.name || '')) return p; return null; };
+    midiIn = find(access.inputs); midiOut = find(access.outputs);
+    if (!midiIn){ ms.textContent = 'Geen APC40 gevonden. Sluit hem aan via USB, sluit andere programma\'s die hem gebruiken (zoals Ableton of SoundSwitch) en druk opnieuw op de knop.'; return; }
+    midiIn.onmidimessage = onMidi;
+    if (midiOut){
+      try { midiOut.send([0xF0, 0x47, 0x7F, 0x29, 0x60, 0x00, 0x04, 0x42, 0x08, 0x02, 0x01, 0xF7]); } catch(e){}   // modus 2: lampjes volledig door deze pagina bestuurd
+      ledSent = {}; sceneLedSent.fill(-1); initRings(); try { midiOut.send([0xFA]); } catch(e){} clockTicks = null;
+    }
+    $('midiBtn').classList.add('on');
+    ms.textContent = 'APC40 gekoppeld, ingedeeld als mengpaneel. Kolom 1: strobe · 2: alle scanners · 3–6: scanner A, B, C, D · 7: rook · 8: scènes (boven → onder: Sfeer, Rustig, Party, Vol gas, alles fel zolang je vasthoudt). Per kolom: knop boven, 5 pads, Clip Stop (aan/uit), lange knop, cijferknop en fader. Masterfader = dimmer.';
+    access.onstatechange = () => { if (midiIn && midiIn.state === 'disconnected'){ ms.textContent = 'APC40 losgekoppeld.'; $('midiBtn').classList.remove('on'); midiOut = null; } };
+  };
+  // automatisch koppelen als Chrome eerder al toestemming gaf
+  (async () => {
+    try {
+      if (!navigator.permissions || !navigator.requestMIDIAccess) return;
+      const st = await navigator.permissions.query({name:'midi', sysex:true});
+      if (st.state === 'granted') $('midiBtn').onclick();
+    } catch(e){}
+  })();
+
+  function refresh(){ scenesEl.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.id === current)); if (typeof syncUI === 'function') syncUI(); }
   refresh();
   $('bpm').oninput = e => { bpm = +e.target.value; $('bpmV').textContent = bpm; };
   const astat = $('astat');
@@ -1856,10 +2486,11 @@
     astat.textContent = 'Licht volgt weer de BPM-schuif.';
   };
   $('dim').oninput = e => { master = e.target.value / 100; $('dimV').textContent = e.target.value + '%'; };
-  $('smoke').onclick = e => { smokeOn = !smokeOn; e.target.classList.toggle('on', smokeOn); if (smokeOn){ burstLeft = 3; } };
+  $('smoke').onclick = () => { if (smokeOn) setSmokeDiv(-2); else { setSmokeDiv(smokeDiv); burstLeft = 3; } };
   $('puff').onclick = () => { burstLeft = Math.max(burstLeft, 2.5); };
   $('amb').onclick = e => { ambOn = !ambOn; e.target.classList.toggle('on', ambOn); };
   let roomOn = false;
+  roomOnRef = () => roomOn;
   $('room').onclick = e => { roomOn = !roomOn; e.target.classList.toggle('on', roomOn); hemi.intensity = roomOn ? 0.6 : 0.07; };
 
   const CAMS = {
